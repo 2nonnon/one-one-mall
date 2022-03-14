@@ -26,6 +26,6 @@ git commit -m '$1'
 # if you are deploying to https://<USERNAME>.github.io/<REPO>
 # git push -f git@github.com:2nonnon/a-blog.git main:gh-pages
 # git push -f https://github.com/2nonnon/2nonnon.GitHub.io.git master:main
-git push -u origin master
+git push
 
 cd -
