@@ -1,7 +1,7 @@
 <template>
     <div class="checkbox_item">
-        <label class="check_label" :for="id">
-            <input type="checkbox" :id="id"/>
+        <label class="check_label" @click="handleUpdate(checkbox)">
+            <input type="checkbox" ref="checkbox" :checked="checked" />
             <span class="check_icon">v</span>
         </label>
         <span class="check_text" v-if="text">{{ text }}</span>
@@ -9,12 +9,20 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
+import { defineProps, ref, watchEffect, defineEmits } from 'vue'
 
-type Props = {id:string, text?:string}
-
+type Props = {checked:boolean, text?:string}
 defineProps<Props>()
 
+const checkbox = ref<HTMLInputElement>()
+watchEffect(() => {
+    console.log(checkbox.value?.checked)
+})
+
+const emit = defineEmits(['update:checked'])
+const handleUpdate = (checkbox: HTMLInputElement | undefined) => {
+    emit('update:checked', checkbox?.checked)
+}
 </script>
 
 <style scoped>

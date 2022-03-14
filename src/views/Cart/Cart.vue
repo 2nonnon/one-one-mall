@@ -13,7 +13,7 @@
             </div>
             <div class="cart_main">
                 <div class="main_head">
-                    <checkbox id="a1"></checkbox>
+                    <checkbox v-model:checked="checkAll"></checkbox>
                     <div class="main_title">
                         <div class="title_icon">M</div>
                         <div class="text">原神万有铺子</div>
@@ -22,7 +22,7 @@
                 <div class="checkbox_group">
                     <div class="goods_list">
                         <div class="good_card">
-                            <checkbox id="g1"></checkbox>
+                            <checkbox v-model:checked="checkGroup[0]"></checkbox>
                             <div class="cart_goods">
                                 <div class="good_img">
                                     <img
@@ -66,7 +66,7 @@
             </div>
             <div class="cart_foot">
                 <div class="submit_bar">
-                    <checkbox id="a2" text="全选"></checkbox>
+                    <checkbox v-model:checked="checkAll" text="全选"></checkbox>
                     <div class="submit_container">
                         <div class="submit_info">
                             <div class="submit_count">
@@ -93,6 +93,17 @@
 
 <script setup lang="ts">
 import Checkbox from '@/components/Checkbox/Checkbox.vue';
+import { ref, reactive, watch } from 'vue';
+
+const checkAll = ref(false)
+const checkGroup =  reactive([false])
+
+watch(checkAll ,(newValue, old) => {
+    console.log(newValue, old)
+})
+watch(checkGroup ,(newValue, old) => {
+    console.log(newValue, old)
+})
 </script>
 
 <style scoped>
