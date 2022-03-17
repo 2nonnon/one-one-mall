@@ -19,19 +19,19 @@
             </div>
             <div class="func">
                 <div class="search">
-                    <input type="text" />
-                    <div class="search_icon">O</div>
+                    <input type="text" v-model="value" />
+                    <div class="search_icon" @click="handleSearch">O</div>
                 </div>
                 <div class="user">
                     <div class="profile">
-                        <img src="/Header/profile.png" alt="原神" />
+                        <img src="/Header/profile.png" />
                     </div>
                     <div class="menu">
                         <div class="menu_item" @click="handleToUser">
                             <div class="icon">R</div>
                             <div class="text">个人中心</div>
                         </div>
-                        <div class="menu_item">
+                        <div class="menu_item" @click="handleQuit">
                             <div class="icon">R</div>
                             <div class="text">退出登录</div>
                         </div>
@@ -40,6 +40,7 @@
                 <div class="cart" @click="handleToCart">
                     <div class="cart_icon">O</div>
                     <div class="cart_text">购物车</div>
+                    <div class="cart_count" v-if="count > 0">{{ count }}</div>
                 </div>
             </div>
         </div>
@@ -48,21 +49,39 @@
 
 <script setup lang="ts">
 import router from '@/router';
+import { ref } from 'vue'
 
-const handleToUser = ():void => {
+const count = ref(1)
+const value = ref('')
+
+const handleSearch = () => {
+    // console.log(value.value)
+    router.push({
+        name: 'Main',
+        params: {
+            search: value.value
+        }
+    })
+}
+
+const handleToUser = (): void => {
     router.push({
         name: 'User'
     })
 }
-const handleToCart = ():void => {
+const handleToCart = (): void => {
     router.push({
         name: 'Cart'
     })
 }
-const handleToHome = ():void => {
+const handleToHome = (): void => {
     router.push({
         name: 'Home'
     })
+}
+
+const handleQuit = () => {
+    console.log('溜了溜了')
 }
 </script>
 
@@ -183,6 +202,7 @@ input:focus {
     border-radius: 8px;
     border: 1px solid #eff1f4;
     transform: translateY(100%);
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 .menu_item {
     display: flex;
@@ -195,7 +215,6 @@ input:focus {
     cursor: pointer;
     background: #fff;
     border-radius: 8px;
-    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 .menu_item:hover {
     color: #ff6d6d;
@@ -221,21 +240,39 @@ input:focus {
 }
 .cart {
     display: flex;
+    align-items: center;
+    color: #9696a1;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+.cart:hover {
+    color: #ff6d6d;
+}
+.cart > div + div {
+    margin-left: 6px;
+}
+.cart_icon,
+.cart_text {
+    display: flex;
     justify-content: center;
+    align-items: center;
 }
 .cart_icon {
     height: 24px;
     width: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
-.cart_text {
-    height: 24px;
-    color: #9696a1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-left: 6px;
+.cart_count {
+    display: inline-block;
+    box-sizing: border-box;
+    line-height: 16px;
+    height: 16px;
+    min-width: 16px;
+    padding: 0 3px;
+    text-align: center;
+    border-radius: 50%;
+    font-size: 12px;
+    color: #fff;
+    font-weight: 400;
+    background-color: #ff6d6d;
 }
 </style>

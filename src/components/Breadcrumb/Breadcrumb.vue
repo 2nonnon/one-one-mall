@@ -36,7 +36,7 @@ const handleToHome = (): void => {
 }
 .bc_item:last-child::before {
     margin-right: 12px;
-    content: ">";
+    content: "> ";
     font-size: 14px;
     color: #9696a1;
 }

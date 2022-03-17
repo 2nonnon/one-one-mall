@@ -16,7 +16,7 @@
 # echo 'nnln.love' > CNAME
 
 # git init
-# git add -A
+git add -A
 # git commit -m 'deploy'
 git commit -m '$1'
 

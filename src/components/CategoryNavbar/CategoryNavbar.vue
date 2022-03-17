@@ -1,240 +1,136 @@
 <template>
     <div class="category_navbar">
         <div class="wrapper">
-            <div class="left disable">&lt;</div>
-            <div class="slider">
-                <div class="slider_item center">
-                    <div class="category_item" v-for="item, i in categores1" :key="i">
+            <div :class="{ nav_icon: true, disable: toRight }" @click="handleToRight">&lt;</div>
+            <div class="slider" :class="{beauty: isBeauty}">
+                <div :class="item1Class" class="slider_item">
+                    <div class="category_item">
+                        <div
+                            class="levelone"
+                            @click="handleToCategory(defaultItem)"
+                        >{{ defaultItem }}</div>
+                    </div>
+                    <div class="category_item" v-for="item in categores1" :key="item.id">
                         <div class="levelone" @click="handleToCategory(item.name)">
                             {{ item.name }}
-                            <span class="trangle" v-if="item.children">A</span>
+                            <span
+                                class="trangle"
+                                v-if="item.children?.length !== 0"
+                            >A</span>
                         </div>
-                        <div class="container" v-if="item.children">
+                        <div class="container" v-if="item.children?.length !== 0">
                             <div
                                 class="leveltwo"
-                                v-for="cate, i in item.children"
-                                :key="i"
-                                 @click="handleToCategory(cate.name)"
+                                v-for="cate in item.children"
+                                :key="cate.id"
+                                @click="handleToCategory(cate.name)"
                             >{{ cate.name }}</div>
                         </div>
                     </div>
                 </div>
-                <div class="slider_item hidden">
-                    <div class="category_item" v-for="item, i in categores2" :key="i">
-                        <div class="levelone">{{ item.name }}</div>
-                        <div class="container" v-if="item.children">
+                <div :class="item2Class" class="slider_item">
+                    <div class="category_item" v-for="item in categores2" :key="item.id">
+                        <div class="levelone" @click="handleToCategory(item.name)">
+                            {{ item.name }}
+                            <span
+                                class="trangle"
+                                v-if="item.children?.length !== 0"
+                            >A</span>
+                        </div>
+                        <div class="container" v-if="item.children?.length !== 0">
                             <div
                                 class="leveltwo"
-                                v-for="cate, i in item?.children"
-                                :key="i"
+                                v-for="cate in item.children"
+                                :key="cate.id"
+                                @click="handleToCategory(cate.name)"
                             >{{ cate.name }}</div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="right">&gt;</div>
+            <div :class="{ nav_icon: true, disable: toLeft }" @click="handleToLeft">&gt;</div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { defineEmits } from 'vue'
+import request from '@/serve/request';
+import { defineEmits, reactive, ref } from 'vue'
+const defaultItem = ref('全部商品')
 interface category {
-    id?: number
-    parentId?: number
+    id: number
+    parentId: number
     name: string
     children?: Array<category>
 }
-const categores1: Array<category> = [
-    { name: '全部商品' },
-    {
-        name: '角色-旅行征程', children: [{
-            "name": "派蒙"
-        },
-        {
-            "name": "旅行者男（空）"
-        },
-        {
-            "name": "旅行者女（荧）"
-        },
-        {
-            "name": "怪物敌人"
-        },]
-    },
-    {
-        name: '角色-蒙德城', children: [{
-            "name": "诺艾尔"
-        },
-        {
-            "name": "菲谢尔"
-        },
-        {
-            "name": "砂糖"
-        },
-        {
-            "name": "莫娜"
-        },
-        {
-            "name": "迪奥娜"
-        },
-        {
-            "name": "阿贝多"
-        },
-        {
-            "name": "罗莎莉亚"
-        },
-        {
-            "name": "优菈"
-        },
-        {
-            "name": "班尼特"
-        },
-        {
-            "name": "琴"
-        },
-        {
-            "name": "安柏"
-        },
-        {
-            "name": "丽莎"
-        },
-        {
-            "name": "凯亚"
-        },
-        {
-            "name": "芭芭拉"
-        },
-        {
-            "name": "迪卢克"
-        },
-        {
-            "name": "雷泽"
-        },
-        {
-            "name": "温迪"
-        },
-        {
-            "name": "可莉"
-        },]
-    },
-    {
-        name: '角色-璃月港', children: [{
-            "name": "重云"
-        },
-        {
-            "name": "魈"
-        },
-        {
-            "name": "北斗"
-        },
-        {
-            "name": "凝光"
-        },
-        {
-            "name": "香菱"
-        },
-        {
-            "name": "行秋"
-        },
-        {
-            "name": "刻晴"
-        },
-        {
-            "name": "七七"
-        },
-        {
-            "name": "钟离"
-        },
-        {
-            "name": "辛焱"
-        },
-        {
-            "name": "甘雨"
-        },
-        {
-            "name": "胡桃"
-        },
-        {
-            "name": "烟绯"
-        },
-        {
-            "name": "申鹤"
-        },
-        {
-            "name": "云堇"
-        },]
-    },
-    {
-        name: '角色-稻妻城', children: [{
-            "name": "枫原万叶"
-        },
-        {
-            "name": "神里绫华"
-        },
-        {
-            "name": "宵宫"
-        },
-        {
-            "name": "早柚"
-        },
-        {
-            "name": "雷电将军"
-        },
-        {
-            "name": "九条裟罗"
-        },
-        {
-            "name": "珊瑚宫心海"
-        },
-        {
-            "name": "托马"
-        },
-        {
-            "name": "五郎"
-        },
-        {
-            "name": "荒泷一斗"
-        },
-        {
-            "name": "八重神子"
-        },]
-    },
-    {
-        name: '角色-愚人众', children: [{
-            "name": "达达利亚"
-        },]
-    },
-    {
-        name: '数码百货', children: [{
-            "name": "挂件摆件"
-        },
-        {
-            "name": "毛绒玩偶"
-        },
-        {
-            "name": "数码3c"
-        },
-        {
-            "name": "日用百货"
-        },]
-    },
-    { name: '模玩手办' },
-]
-const categores2: Array<category> = [
-    {
-        name: '服饰', children: [
-            {
-                "name": "T恤"
-            },
-            {
-                "name": "运动服"
-            }]
-    }
-]
+const categores1 = reactive<Array<category>>([])
+const categores2 = reactive<Array<category>>([])
+
 const emit = defineEmits(['category-change'])
 const handleToCategory = (category: string) => {
     emit('category-change', category)
 }
+
+const load = () => {
+    request.get('/category').then(res => {
+        categores1.length = 0
+        categores2.length = 0
+        categores1.push(...res.data)
+        categores2.push(categores1.pop() as category)
+        console.log(res);
+    })
+}
+
+interface ClassObj {
+    center?: boolean
+    hidden?: boolean
+    left?: boolean
+    right?: boolean
+}
+
+const toLeft = ref(false)
+const toRight = ref(true)
+const item1Class = reactive<ClassObj>({ center: true })
+const item2Class = reactive<ClassObj>({ right: true, hidden: true })
+const isBeauty = ref(false)
+
+const getBeauty = (duration: number) => {
+    isBeauty.value = true
+    setTimeout(() => {
+        isBeauty.value = false
+    }, duration)
+}
+
+const handleToLeft = () => {
+    getBeauty(300)
+
+    item2Class.right = false
+    item2Class.hidden = false
+    item2Class.center = true
+
+    item1Class.center = false
+    item1Class.left = true
+    item1Class.hidden = true
+
+    toLeft.value = !toLeft.value
+    toRight.value = !toRight.value
+}
+const handleToRight = () => {
+    getBeauty(300)
+    
+    item2Class.right = true
+    item2Class.center = false
+    item2Class.hidden = true
+
+    item1Class.center = true
+    item1Class.left = false
+    item1Class.hidden = false
+
+    toLeft.value = !toLeft.value
+    toRight.value = !toRight.value
+}
+
+load()
 </script>
 
 <style scoped>
@@ -264,6 +160,9 @@ const handleToCategory = (category: string) => {
     height: 100%;
     flex-grow: 1;
 }
+.slider.beauty {
+    overflow: hidden;
+}
 .slider_item {
     position: absolute;
     top: 0;
@@ -272,6 +171,19 @@ const handleToCategory = (category: string) => {
     height: 100%;
     display: flex;
     transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+.center {
+    transform: translateX(0%);
+}
+.right {
+    transform: translateX(100%);
+}
+.left {
+    transform: translateX(-100%);
 }
 .category_item {
     position: relative;
@@ -332,11 +244,7 @@ const handleToCategory = (category: string) => {
     color: #ff6d6d;
     background-color: rgba(255, 109, 109, 0.1);
 }
-.hidden {
-    display: none;
-}
-.left,
-.right {
+.nav_icon {
     flex-shrink: 0;
     cursor: pointer;
     background-color: rgba(150, 150, 161, 0.5);
@@ -348,12 +256,10 @@ const handleToCategory = (category: string) => {
     text-align: center;
     transition: all cubic-bezier(0.4, 0, 0.2, 1) 300ms;
 }
-.left:hover,
-.right:hover {
+.nav_icon:hover {
     background-color: #ff6d6d;
 }
-.left.disable,
-.right.disable {
+.nav_icon.disable {
     opacity: 0;
     pointer-events: none;
 }

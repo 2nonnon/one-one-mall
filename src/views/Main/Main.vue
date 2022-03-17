@@ -1,5 +1,5 @@
 <template>
-    <main class="main">
+    <main class="container">
         <CategoryNavbar @category-change="handleCategoryChange"></CategoryNavbar>
         <GoodsContent></GoodsContent>
     </main>
@@ -20,7 +20,7 @@ const handleCategoryChange = (category: string) => {
 </script>
 
 <style scoped>
-.main {
+.container {
     width: 100%;
     padding: 0;
     margin-bottom: 24px;
