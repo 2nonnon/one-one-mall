@@ -5,7 +5,7 @@
         <div class="goods_list">
             <div class="container">
                 <template v-for="item in goods" :key="item.id">
-                    <div class="good_card" @click="handleToDetail">
+                    <div class="good_card" @click="handleToDetail(item.id)">
                         <div class="good_img">
                             <img :src="item.coverUrl" />
                         </div>
@@ -14,7 +14,7 @@
                                 <div class="good_status" v-if="item.tag">
                                     <img :src="status[item.tag]" />
                                 </div>
-                                &nbsp;{{ item.name }}
+                                {{ item.name }}
                             </div>
                             <div class="price_wrapper">
                                 <price :price="[item.price]"></price>
@@ -94,9 +94,13 @@ const handlePageChange = (next: number) => {
     load()
 }
 
-const handleToDetail = (): void => {
+const handleToDetail = (id: number): void => {
+    console.log(id)
     router.push({
-        name: 'Detail'
+        name: 'Detail',
+        params: {
+            id
+        }
     })
 }
 
@@ -183,5 +187,7 @@ img {
 .price_wrapper {
     margin-top: 13px;
     line-height: 32px;
+    color: #ff6d6d;
+    font-weight: 700;
 }
 </style>

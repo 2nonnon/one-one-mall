@@ -1,14 +1,12 @@
 <template>
-  <Header></Header>
-  <router-view v-slot="{ Component }">
-    <keep-alive>
-      <component :is="Component" />
-    </keep-alive>
-  </router-view>
-  <!-- <Main></Main> -->
+<div class="container">
+    <Header></Header>
+    <router-view />
+    <Login></Login>
+</div>
 </template>
 
 <script setup lang="ts">
 import Header from '../components/Header/Header.vue'
-// import Main from '../components/Main/Main.vue'
+import Login from '../components/Login/Login.vue'
 </script>

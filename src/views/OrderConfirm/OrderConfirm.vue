@@ -11,10 +11,10 @@
             </div>
             <div>
                 <div class="wrapper font-lg">
-                    <span>秋叶春海</span>
-                    <span>166****1825</span>
+                    <span>{{ orderAdress.name }}</span>
+                    <span>{{ `${orderAdress.mobile.slice(0, 3)}****${orderAdress.mobile.slice(7)}` }}</span>
                 </div>
-                <div class="font-lg address_info">辽宁省大连市甘井子区轻工苑1号大连工业大学</div>
+                <div class="font-lg address_info">{{ orderAdress.address }}</div>
             </div>
         </div>
         <div class="order_body">
@@ -36,60 +36,32 @@
                     <div class="text">原神万有铺子</div>
                 </div>
                 <div>
-                    <div class="good_card">
+                    <div class="good_card" v-for="item in goods" :key="item.goodsId">
                         <div class="cart_goods">
                             <div class="good_img">
-                                <img
-                                    src="/ShopList/1528e043a2cd396f884128ac2962c1fb_5817809896503403958.jpeg"
-                                />
+                                <img :src="item.coverUrl" />
                             </div>
                             <div class="good_info">
-                                <div class="good_name">【原神】线下店系列周边 鼠标垫 Genshin</div>
-                                <div class="good_attr">甘雨-璃月港的一夜</div>
+                                <div class="good_name">{{ item.name }}</div>
+                                <!-- <div class="good_attr">甘雨-璃月港的一夜</div> -->
                             </div>
                         </div>
                         <div class="cart_price">
-                            <div class="price">
-                                <span class="currency">¥</span>
-                                <span class="integer">66</span>
-                                <span class="decimal">.00</span>
-                            </div>
+                            <price
+                                :price="[item.marketPrice]"
+                                :has-fix="true"
+                                :cur-font="16"
+                                :num-font="16"
+                            ></price>
                         </div>
-                        <div class="cart_count font-lg">x1</div>
-                        <div class="cart_total">
-                            <div class="price" style="color: #ff6d6d;">
-                                <span class="currency">¥</span>
-                                <span class="integer">66</span>
-                                <span class="decimal">.00</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="good_card">
-                        <div class="cart_goods">
-                            <div class="good_img">
-                                <img
-                                    src="/ShopList/1528e043a2cd396f884128ac2962c1fb_5817809896503403958.jpeg"
-                                />
-                            </div>
-                            <div class="good_info">
-                                <div class="good_name">【原神】线下店系列周边 鼠标垫 Genshin</div>
-                                <div class="good_attr">甘雨-璃月港的一夜</div>
-                            </div>
-                        </div>
-                        <div class="cart_price">
-                            <div class="price">
-                                <span class="currency">¥</span>
-                                <span class="integer">66</span>
-                                <span class="decimal">.00</span>
-                            </div>
-                        </div>
-                        <div class="cart_count font-lg">x1</div>
-                        <div class="cart_total">
-                            <div class="price" style="color: #ff6d6d;">
-                                <span class="currency">¥</span>
-                                <span class="integer">66</span>
-                                <span class="decimal">.00</span>
-                            </div>
+                        <div class="cart_count font-lg">x{{ item.quantity }}</div>
+                        <div class="cart_total red">
+                            <price
+                                :price="[item.marketPrice * item.quantity]"
+                                :has-fix="true"
+                                :cur-font="16"
+                                :num-font="16"
+                            ></price>
                         </div>
                     </div>
                 </div>
@@ -116,11 +88,7 @@
                         <div class="info_row">
                             <div class="row_label">运费：</div>
                             <div class="row_value red">
-                                <div class="price">
-                                    <span class="currency">¥</span>
-                                    <span class="integer">66</span>
-                                    <span class="decimal">.00</span>
-                                </div>
+                                <price :price="[0]" :has-fix="true" :cur-font="14" :num-font="14"></price>
                             </div>
                         </div>
                     </div>
@@ -131,39 +99,103 @@
                 <div class="info_row">
                     <div class="row_label">总计：</div>
                     <div class="row_value red">
-                        <div class="price">
-                            <span class="currency">¥</span>
-                            <span class="integer">66</span>
-                            <span class="decimal">.00</span>
-                        </div>
+                        <price :price="[total]" :has-fix="true" :cur-font="18" :num-font="18"></price>
                     </div>
                 </div>
                 <div class="mt-20 text-right">
                     <div class="truncate">
-                        <span class="text-patch">寄送至 </span>
-                        <span>秋叶春海 166****1825</span>
+                        <span class="text-patch">寄送至</span>
+                        <span>{{ orderAdress.name }} {{ `${orderAdress.mobile.slice(0, 3)}****${orderAdress.mobile.slice(7)}` }}</span>
                     </div>
-                    <div>辽宁省大连市甘井子区轻工苑1号大连工业大学</div>
+                    <div>{{ orderAdress.address }}</div>
                 </div>
                 <div class="mt-12">
-                    <button class="buy">提交订单</button>
+                    <button class="buy" @click="handleSettle">提交订单</button>
                 </div>
             </div>
         </div>
     </div>
 </template>
 
+<script lang="ts">
+export default { name: 'OrderConfirm' }
+</script>
+
 <script setup lang="ts">
-import { onBeforeRouteUpdate, useRoute } from 'vue-router';
+import Price from '@/components/Price/Price.vue'
+import router from '@/router';
+import request from '@/serve/request';
+import { onMounted, reactive, computed } from 'vue'
 
-const route = useRoute()
-
-console.log(route)
-
-onBeforeRouteUpdate((to, from) => {
-    console.log(to, from)
+interface good {
+    checked: boolean
+    coverUrl: string
+    goodsId: string
+    id: number
+    isSoldOut: number
+    marketPrice: number
+    name: string
+    price: number
+    quantity: number
+    saleTime: string
+    tag: number
+}
+const goods = reactive<good[]>([])
+const total = computed(() => {
+    return goods.reduce((pre, cur) => {
+        return pre + cur.marketPrice * cur.quantity
+    }, 0)
 })
 
+const orderAdress = reactive({
+    userId: '',
+    name: '',
+    mobile: '',
+    address: ''
+})
+
+const getAddress = (userId: number) => {
+    request.get('/address', { params: { search: userId } }).then((res) => {
+        console.log('地址', res.data.records[0])
+        orderAdress.address = res.data.records[0].address
+    })
+}
+
+const handleSettle = () => {
+    request.post('/order', {
+        userId: orderAdress.userId,
+        mobile: orderAdress.mobile,
+        receiver: orderAdress.name,
+        address: orderAdress.address,
+        cost: total.value
+    }).then(res => {
+        console.log(res)
+        Promise.all(goods.map(good => {
+            return request.post('/orderDetail', {
+                orderId: res.data,
+                goodsId: good.id,
+                quantity: good.quantity,
+                cost: good.marketPrice * good.quantity
+            })
+        })).then(result => {
+            console.log(result)
+        })
+        router.push({
+            name: 'User'
+        })
+    })
+}
+
+onMounted(() => {
+    const data: good[] = JSON.parse(sessionStorage.getItem('order') ?? '')
+    goods.push(...data)
+    const user = JSON.parse(sessionStorage.getItem('user') ?? '')
+    const userId = user?.id
+    if (userId) getAddress(userId)
+    orderAdress.userId = userId
+    orderAdress.name = user.username
+    orderAdress.mobile = user.mobile
+})
 </script>
 
 <style scoped>

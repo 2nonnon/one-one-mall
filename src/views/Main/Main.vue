@@ -24,5 +24,6 @@ const handleCategoryChange = (category: string) => {
     width: 100%;
     padding: 0;
     margin-bottom: 24px;
+    /* overflow: hidden; */
 }
 </style>

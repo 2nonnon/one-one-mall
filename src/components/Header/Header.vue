@@ -22,9 +22,9 @@
                     <input type="text" v-model="value" />
                     <div class="search_icon" @click="handleSearch">O</div>
                 </div>
-                <div class="user">
-                    <div class="profile">
-                        <img src="/Header/profile.png" />
+                <div class="user" :class="{ logined: isLogined }">
+                    <div class="profile" @click="handleValidate(handleToUser)">
+                        <img :src="avatar" />
                     </div>
                     <div class="menu">
                         <div class="menu_item" @click="handleToUser">
@@ -37,10 +37,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="cart" @click="handleToCart">
+                <div class="cart" @click="handleValidate(handleToCart)">
                     <div class="cart_icon">O</div>
                     <div class="cart_text">购物车</div>
-                    <div class="cart_count" v-if="count > 0">{{ count }}</div>
+                    <!-- <div class="cart_count" v-if="count > 0">{{ count }}</div> -->
                 </div>
             </div>
         </div>
@@ -49,10 +49,14 @@
 
 <script setup lang="ts">
 import router from '@/router';
-import { ref } from 'vue'
+import { emitter } from '../../util/emitter'
+import { ref, onMounted } from 'vue'
+import request from '@/serve/request';
 
-const count = ref(1)
+const count = ref(0)
 const value = ref('')
+const avatar = ref('/Header/profile.png')
+const isLogined = ref(false)
 
 const handleSearch = () => {
     // console.log(value.value)
@@ -80,9 +84,45 @@ const handleToHome = (): void => {
     })
 }
 
-const handleQuit = () => {
-    console.log('溜了溜了')
+type callback = () => void
+
+const handleValidate = (cb: callback) => {
+    if (isLogined.value) {
+        cb()
+    } else {
+        emitter.emit('toLogin', true)
+    }
 }
+
+const handleQuit = () => {
+    sessionStorage.removeItem('user')
+    checkLogin()
+}
+
+const checkLogin = () => {
+    const user = sessionStorage.getItem('user')
+    if (user) {
+        isLogined.value = true
+        avatar.value = '/Header/avatar40017.webp'
+        const userId = JSON.parse(user).id
+        getCartCount(userId)
+    } else {
+        isLogined.value = false
+        avatar.value = '/Header/profile.png'
+    }
+}
+
+emitter.on('logined', checkLogin)
+
+const getCartCount = (userId: number) => {
+    request.get('/cart', { params: { userId } }).then((res) => {
+        count.value = res.data.length
+    })
+}
+
+onMounted(() => {
+    checkLogin()
+})
 </script>
 
 <style scoped>
@@ -187,7 +227,7 @@ input:focus {
     align-items: center;
     transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-.user:hover .menu {
+.user.logined:hover .menu {
     display: block;
 }
 .menu {
@@ -237,6 +277,11 @@ input:focus {
 .profile {
     width: 32px;
     height: 32px;
+    border-radius: 999px;
+    overflow: hidden;
+}
+.profile {
+    object-fit: cover;
 }
 .cart {
     display: flex;
@@ -269,7 +314,7 @@ input:focus {
     min-width: 16px;
     padding: 0 3px;
     text-align: center;
-    border-radius: 50%;
+    border-radius: 999px;
     font-size: 12px;
     color: #fff;
     font-weight: 400;

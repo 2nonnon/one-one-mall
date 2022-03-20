@@ -2,7 +2,7 @@
     <div class="category_navbar">
         <div class="wrapper">
             <div :class="{ nav_icon: true, disable: toRight }" @click="handleToRight">&lt;</div>
-            <div class="slider" :class="{beauty: isBeauty}">
+            <div class="slider" :class="{ beauty: isBeauty }">
                 <div :class="item1Class" class="slider_item">
                     <div class="category_item">
                         <div
@@ -117,7 +117,7 @@ const handleToLeft = () => {
 }
 const handleToRight = () => {
     getBeauty(300)
-    
+
     item2Class.right = true
     item2Class.center = false
     item2Class.hidden = true

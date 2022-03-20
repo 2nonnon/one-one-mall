@@ -29,7 +29,7 @@ const routes: Array<RouteRecordRaw> = [
           import(/* webpackChunkName: "about" */ '../views/Cart/Cart.vue'),
       },
       {
-        path: '/detail',
+        path: '/detail/:id',
         name: 'Detail',
         component: () =>
           import(/* webpackChunkName: "about" */ '../views/GoodDetail/GoodDetail.vue'),

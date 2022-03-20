@@ -13,7 +13,7 @@
             </div>
             <div class="cart_main">
                 <div class="main_head">
-                    <checkbox v-model:checked="checkAll"></checkbox>
+                    <checkbox v-model:checked="checkAll" @click="handleCheckAll"></checkbox>
                     <div class="main_title">
                         <div class="title_icon">M</div>
                         <div class="text">原神万有铺子</div>
@@ -21,43 +21,39 @@
                 </div>
                 <div class="checkbox_group">
                     <div class="goods_list">
-                        <div class="good_card">
-                            <checkbox v-model:checked="checkGroup[0]"></checkbox>
+                        <div class="good_card" v-for="item in data" :key="item.goodsId">
+                            <checkbox v-model:checked="item.checked" @click="handleCheck"></checkbox>
                             <div class="cart_goods">
                                 <div class="good_img">
-                                    <img
-                                        src="/ShopList/1528e043a2cd396f884128ac2962c1fb_5817809896503403958.jpeg"
-                                    />
+                                    <img :src="item.coverUrl" />
                                 </div>
                                 <div class="good_info">
-                                    <div class="good_name">【原神】线下店系列周边 鼠标垫 Genshin</div>
-                                    <div class="good_attr">甘雨-璃月港的一夜</div>
+                                    <div class="good_name">{{ item.name }}</div>
+                                    <!-- <div class="good_attr">甘雨-璃月港的一夜</div> -->
                                 </div>
                             </div>
                             <div class="cart_price">
-                                <div class="price">
-                                    <span class="currency">¥</span>
-                                    <span class="integer">66</span>
-                                    <span class="decimal">.00</span>
-                                </div>
+                                <price
+                                    :num-font="16"
+                                    :cur-font="16"
+                                    :has-fix="true"
+                                    :price="[item.marketPrice]"
+                                ></price>
                             </div>
                             <div class="cart_count">
-                                <div class="input_number">
-                                    <button class="disable">-</button>
-                                    <input step="1" type="number" autocomplete="off" />
-                                    <button>+</button>
-                                </div>
+                                <counter v-model="(item.quantity)"></counter>
                             </div>
                             <div class="cart_total">
-                                <div class="price">
-                                    <span class="currency">¥</span>
-                                    <span class="integer">66</span>
-                                    <span class="decimal">.00</span>
-                                </div>
+                                <price
+                                    :num-font="16"
+                                    :cur-font="16"
+                                    :has-fix="true"
+                                    :price="[item.marketPrice * item.quantity]"
+                                ></price>
                             </div>
                             <div class="cart_action">
                                 <div class="delete">
-                                    <div class="delete_icon">N</div>
+                                    <div class="delete_icon" @click="handleDelete(item.cartId)">N</div>
                                 </div>
                             </div>
                         </div>
@@ -66,23 +62,21 @@
             </div>
             <div class="cart_foot">
                 <div class="submit_bar">
-                    <checkbox v-model:checked="checkAll" text="全选"></checkbox>
+                    <checkbox v-model:checked="checkAll" text="全选" @click="handleCheckAll"></checkbox>
                     <div class="submit_container">
                         <div class="submit_info">
                             <div class="submit_count">
                                 <span class="count_text">共</span>
-                                <span class="count_num">0</span>
+                                <span class="count_num">{{ total }}</span>
                                 <span class="count_text">件</span>
                             </div>
                             <div class="font-lg">合计（不含运费）：</div>
-                            <div class="price submit_price">
-                                <span class="currency" style="font-size: 24px;">¥</span>
-                                <span class="integer">0</span>
-                                <span class="decimal">.00</span>
+                            <div class="total_price">
+                                <price :price="[totalPrice]" :has-fix="true" :cur-font="24" :num-font="34"></price>
                             </div>
                         </div>
                         <div>
-                            <button disabled="true" class="buy">结算</button>
+                            <button :disabled="btnDisabled" class="settle" @click="handleSettle">结算</button>
                         </div>
                     </div>
                 </div>
@@ -93,16 +87,105 @@
 
 <script setup lang="ts">
 import Checkbox from '@/components/Checkbox/Checkbox.vue';
-import { ref, reactive, watch } from 'vue';
+import Counter from '@/components/Counter/Counter.vue';
+import Price from '@/components/Price/Price.vue'
+import router from '@/router';
+import request from '@/serve/request';
+import { ref, reactive, onMounted, computed } from 'vue';
+
+interface good {
+    coverUrl: string
+    goodsId: string
+    id: number
+    isSoldOut: number
+    marketPrice: number
+    name: string
+    price: number
+    saleTime: string
+    tag: number
+    quantity: number
+    checked: boolean
+    cartId: number
+}
+
+const data = reactive<good[]>([])
 
 const checkAll = ref(false)
-const checkGroup =  reactive([false])
+const btnDisabled = ref(true)
 
-watch(checkAll ,(newValue, old) => {
-    console.log(newValue, old)
+const total = computed<number>(() => {
+    return data.reduce((pre, cur) => {
+        if (cur.checked) return pre + cur.quantity
+        else return pre
+    }, 0)
 })
-watch(checkGroup ,(newValue, old) => {
-    console.log(newValue, old)
+const totalPrice = computed<number>(() => {
+    return data.reduce((pre, cur) => {
+        if (cur.checked) return pre + cur.quantity * cur.marketPrice
+        else return pre
+    }, 0)
+})
+
+const btnCheck = () => {
+    const has = data.some((item) => item.checked)
+    if (has) btnDisabled.value = false
+    else btnDisabled.value = true
+}
+
+const handleCheck = () => {
+    const isAll = data.every((item) => item.checked)
+    if (isAll) checkAll.value = true
+    else checkAll.value = false
+    btnCheck()
+}
+
+const handleCheckAll = () => {
+    data.forEach(item => item.checked = checkAll.value)
+    btnCheck()
+}
+
+const handleSettle = () => {
+    const settleGoods = data.filter(item => item.checked)
+    console.log(settleGoods)
+    sessionStorage.setItem('order', JSON.stringify(settleGoods))
+    router.push({
+        name: 'OrderConfirm'
+    })
+}
+
+const handleDelete = (id: number) => {
+    request.delete(`/cart/${id}`).then(res => {
+        console.log('删除', res)
+        data.length = 0
+        load()
+    })
+}
+
+const load = () => {
+    const id = JSON.parse(sessionStorage.getItem('user') as string).id
+    request.get('/cart', { params: { userId: id } }).then((res) => {
+        console.log('cart----', res)
+        const quantities = new Map()
+        res.data.forEach((item: { quantity: number, goodsId: number, id: number }) => {
+            quantities.set(item.goodsId, {quantity: item.quantity, cartId: item.id})
+        })
+        const ids = res.data.map((item: { goodsId: number }) => item.goodsId)
+        request.post('/goods/selectBatch', ids).then((res) => {
+            console.log('商品===', res)
+            const goods = res.data
+            goods.forEach((item: { id: number, quantity?: number, checked?: boolean, cartId?: number }) => {
+                item.quantity = quantities.get(item.id).quantity
+                item.cartId = quantities.get(item.id).cartId
+                item.checked = false
+            })
+            data.push(...goods)
+            console.log(goods)
+        })
+    })
+}
+
+onMounted(() => {
+    load()
 })
 </script>
 
@@ -361,7 +444,7 @@ input::-webkit-inner-spin-button {
     white-space: nowrap;
     color: #ff6d6d;
 }
-button.buy {
+button.settle {
     width: 180px;
     min-width: 180px;
     height: 56px;
@@ -378,12 +461,12 @@ button.buy {
     align-items: center;
     transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-.buy {
+.settle {
     color: #fff;
     background-color: #ff6d6d;
     position: relative;
 }
-.buy::after {
+.settle::after {
     content: "";
     position: absolute;
     background-color: rgba(255, 255, 255, 0.5);
@@ -394,13 +477,17 @@ button.buy {
     height: 100%;
     transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-.buy:hover::after {
+.settle:not(:disabled):hover::after {
     opacity: 1;
 }
-.buy:disabled {
+.settle:disabled {
     color: #c5c5cb;
     background-color: #f3f3f4;
     border-color: #f3f3f4;
     cursor: not-allowed;
+}
+.total_price {
+    font-weight: 500;
+    color: #ff6d6d
 }
 </style>

@@ -1,35 +1,37 @@
 <template>
     <div class="loading">
-        <div class="good_detail">
+        <div class="good_detail" v-if="data[0]">
             <div class="detail_head">
                 <div class="img_swiper">
                     <div class="swiper_main">
-                        <img :src="currentImg.url" />
+                        <img :src="data[0].coverUrl" />
+                        <!-- <img :src="currentImg.url" /> -->
                     </div>
                     <div class="swiper_item">
+                        <img class="img_active" :src="data[0].coverUrl" />
+                    </div>
+                    <!-- <div class="swiper_item">
                         <img
-                            v-for="url, i in data.banner"
+                            v-for="url, i in banner"
                             :key="i"
                             @mouseenter="handleMouseEnter(url, i)"
                             :class="{ img_active: currentImg.i === i }"
                             :src="url"
                         />
-                    </div>
+                    </div>-->
                 </div>
                 <div class="detail_info">
                     <div class="detail_title">
                         <div class="good_status">
-                            <img
-                                src="/Status/52a332d5a64c66bd3471f5ed39c35868_7340073586395887667.png"
-                            />
+                            <img :src="status[data[0].tag]" />
                         </div>
-                        {{ data.name }}
+                        {{ data[0]?.name }}
                     </div>
                     <div class="detail_prices">
                         <price
-                            :price="[data.price, data.price]"
-                            :range="true"
-                            :hasFix="true"
+                            :price="[data[0].marketPrice]"
+                            :range="false"
+                            :hasFix="false"
                             split="dash"
                             :numFont="34"
                             :curFont="24"
@@ -37,6 +39,15 @@
                     </div>
                     <div class="sku">
                         <div class="sku_row">
+                            <div class="sku_title">规格</div>
+                            <div class="checkbox_group">
+                                <label class="checkbox_item checked">
+                                    <input type="checkbox" />
+                                    {{ data[0].name }}
+                                </label>
+                            </div>
+                        </div>
+                        <!-- <div class="sku_row">
                             <div class="sku_title">规格</div>
                             <div class="checkbox_group">
                                 <label class="checkbox_item checked">
@@ -61,26 +72,22 @@
                                     XXL
                                 </label>
                             </div>
-                        </div>
+                        </div>-->
                         <div class="sku_row">
                             <div class="sku_title">数量</div>
-                            <div class="input_number">
-                                <button class="disable">-</button>
-                                <input step="1" type="number" autocomplete="off" />
-                                <button>+</button>
-                            </div>
+                            <counter v-model="data[0].quantity"></counter>
                             <div class="stock">库存445件</div>
                         </div>
                     </div>
                     <div class="detail_btns">
-                        <button class="buy" @click="handleToOrderConfirm(2333)">立即购买</button>
-                        <button class="add">加入购物车</button>
+                        <button class="buy" @click="handleValidate(handleToOrderConfirm)">立即购买</button>
+                        <button class="add" @click="handleValidate(handleAddToCart)">加入购物车</button>
                     </div>
                 </div>
             </div>
             <div class="seperator"></div>
             <div class="detail_body">
-                <img v-for="url, i in data.main" :key="i" :src="url" />
+                <img v-for="url, i in main" :key="i" :src="url" />
             </div>
         </div>
     </div>
@@ -88,201 +95,263 @@
 
 <script setup lang="ts">
 import Price from '../../components/Price/Price.vue'
+import Counter from '../../components/Counter/Counter.vue'
+import request from '@/serve/request';
 import router from '@/router';
-import { reactive } from 'vue';
+import { onBeforeRouteUpdate, useRoute } from 'vue-router';
+import { reactive, onMounted } from 'vue';
+import { emitter } from '@/util/emitter';
 
-const data = reactive({
-    banner: ["/ShopList/1528e043a2cd396f884128ac2962c1fb_5817809896503403958.jpeg", '/ShopList/15da4215c98796a8399492bf8fa3e62b_4584349108407072366.jpeg', '/ShopList/1ac56689afc06dc536d686f9b3e1daf4_4851491045914724997.jpeg'],
-    name: '【原神】花语青风-蒙德主题系列服饰卫衣运动裤 Genshin',
-    price: 8800,
-    skus: {
-        "fc3201a66b78c0ca_g805d9dc43aca013": {
-            "id": 68,
-            "attr": "【预售，预计3月中旬发货】卫衣-2XL",
-            "market_price": 28900,
-            "price": 28900,
-            "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/9ec84b2b782576bdadea21328a3c3fc4_3117940514605037149.jpeg",
-            "sale_attr1_key": "fc3201a66b78c0ca",
-            "sale_attr1_val": "【预售，预计3月中旬发货】卫衣",
-            "sale_attr2_key": "g805d9dc43aca013",
-            "sale_attr2_val": "2XL"
-        },
-        "a1775af7fcb309a6_b148d1ee08dfd87b": {
-            "id": 80,
-            "attr": "【预售，预计4月中旬发货】运动裤-M",
-            "market_price": 16900,
-            "price": 16900,
-            "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/2f79a72ff34ca5cb6d407a537f163201_7772943545422900048.jpeg",
-            "sale_attr1_key": "a1775af7fcb309a6",
-            "sale_attr1_val": "【预售，预计4月中旬发货】运动裤",
-            "sale_attr2_key": "b148d1ee08dfd87b",
-            "sale_attr2_val": "M"
-        },
-        "fc3201a66b78c0ca_n1fedd771fe95ce4": {
-            "id": 77,
-            "attr": "【预售，预计3月中旬发货】卫衣-3XL",
-            "market_price": 28900,
-            "price": 28900,
-            "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/9ec84b2b782576bdadea21328a3c3fc4_885488545817217120.jpeg",
-            "sale_attr1_key": "fc3201a66b78c0ca",
-            "sale_attr1_val": "【预售，预计3月中旬发货】卫衣",
-            "sale_attr2_key": "n1fedd771fe95ce4",
-            "sale_attr2_val": "3XL"
-        },
-        "a1775af7fcb309a6_p85a0ab86d6c82ac": {
-            "id": 71,
-            "attr": "【预售，预计4月中旬发货】运动裤-L",
-            "market_price": 16900,
-            "price": 16900,
-            "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/2f79a72ff34ca5cb6d407a537f163201_4474655492288973655.jpeg",
-            "sale_attr1_key": "a1775af7fcb309a6",
-            "sale_attr1_val": "【预售，预计4月中旬发货】运动裤",
-            "sale_attr2_key": "p85a0ab86d6c82ac",
-            "sale_attr2_val": "L"
-        },
-        "a1775af7fcb309a6_g805d9dc43aca013": {
-            "id": 72,
-            "attr": "【预售，预计4月中旬发货】运动裤-2XL",
-            "market_price": 16900,
-            "price": 16900,
-            "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/2f79a72ff34ca5cb6d407a537f163201_2797822829700822310.jpeg",
-            "sale_attr1_key": "a1775af7fcb309a6",
-            "sale_attr1_val": "【预售，预计4月中旬发货】运动裤",
-            "sale_attr2_key": "g805d9dc43aca013",
-            "sale_attr2_val": "2XL"
-        },
-        "fc3201a66b78c0ca_b148d1ee08dfd87b": {
-            "id": 75,
-            "attr": "【预售，预计3月中旬发货】卫衣-M",
-            "market_price": 28900,
-            "price": 28900,
-            "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/9ec84b2b782576bdadea21328a3c3fc4_573648175200565088.jpeg",
-            "sale_attr1_key": "fc3201a66b78c0ca",
-            "sale_attr1_val": "【预售，预计3月中旬发货】卫衣",
-            "sale_attr2_key": "b148d1ee08dfd87b",
-            "sale_attr2_val": "M"
-        },
-        "fc3201a66b78c0ca_p85a0ab86d6c82ac": {
-            "id": 69,
-            "attr": "【预售，预计3月中旬发货】卫衣-L",
-            "market_price": 28900,
-            "price": 28900,
-            "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/9ec84b2b782576bdadea21328a3c3fc4_3462505051705178612.jpeg",
-            "sale_attr1_key": "fc3201a66b78c0ca",
-            "sale_attr1_val": "【预售，预计3月中旬发货】卫衣",
-            "sale_attr2_key": "p85a0ab86d6c82ac",
-            "sale_attr2_val": "L"
-        },
-        "a1775af7fcb309a6_n1fedd771fe95ce4": {
-            "id": 81,
-            "attr": "【预售，预计4月中旬发货】运动裤-3XL",
-            "market_price": 16900,
-            "price": 16900,
-            "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/2f79a72ff34ca5cb6d407a537f163201_9017073235929223059.jpeg",
-            "sale_attr1_key": "a1775af7fcb309a6",
-            "sale_attr1_val": "【预售，预计4月中旬发货】运动裤",
-            "sale_attr2_key": "n1fedd771fe95ce4",
-            "sale_attr2_val": "3XL"
-        },
-        "fc3201a66b78c0ca_ic144d8ec6667098": {
-            "id": 74,
-            "attr": "【预售，预计3月中旬发货】卫衣-XS",
-            "market_price": 28900,
-            "price": 28900,
-            "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/9ec84b2b782576bdadea21328a3c3fc4_4787737299736529525.jpeg",
-            "sale_attr1_key": "fc3201a66b78c0ca",
-            "sale_attr1_val": "【预售，预计3月中旬发货】卫衣",
-            "sale_attr2_key": "ic144d8ec6667098",
-            "sale_attr2_val": "XS"
-        },
-        "fc3201a66b78c0ca_ge78bd6bd1321aaf": {
-            "id": 76,
-            "attr": "【预售，预计3月中旬发货】卫衣-S",
-            "market_price": 28900,
-            "price": 28900,
-            "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/9ec84b2b782576bdadea21328a3c3fc4_3624862993541767613.jpeg",
-            "sale_attr1_key": "fc3201a66b78c0ca",
-            "sale_attr1_val": "【预售，预计3月中旬发货】卫衣",
-            "sale_attr2_key": "ge78bd6bd1321aaf",
-            "sale_attr2_val": "S"
-        },
-        "fc3201a66b78c0ca_c434b0fba5876e45": {
-            "id": 73,
-            "attr": "【预售，预计3月中旬发货】卫衣-XL",
-            "market_price": 28900,
-            "price": 28900,
-            "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/9ec84b2b782576bdadea21328a3c3fc4_3210091565929206342.jpeg",
-            "sale_attr1_key": "fc3201a66b78c0ca",
-            "sale_attr1_val": "【预售，预计3月中旬发货】卫衣",
-            "sale_attr2_key": "c434b0fba5876e45",
-            "sale_attr2_val": "XL"
-        },
-        "a1775af7fcb309a6_ic144d8ec6667098": {
-            "id": 78,
-            "attr": "【预售，预计4月中旬发货】运动裤-XS",
-            "market_price": 16900,
-            "price": 16900,
-            "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/2f79a72ff34ca5cb6d407a537f163201_4015239940410625682.jpeg",
-            "sale_attr1_key": "a1775af7fcb309a6",
-            "sale_attr1_val": "【预售，预计4月中旬发货】运动裤",
-            "sale_attr2_key": "ic144d8ec6667098",
-            "sale_attr2_val": "XS"
-        },
-        "a1775af7fcb309a6_ge78bd6bd1321aaf": {
-            "id": 79,
-            "attr": "【预售，预计4月中旬发货】运动裤-S",
-            "market_price": 16900,
-            "price": 16900,
-            "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/2f79a72ff34ca5cb6d407a537f163201_2556223372845980260.jpeg",
-            "sale_attr1_key": "a1775af7fcb309a6",
-            "sale_attr1_val": "【预售，预计4月中旬发货】运动裤",
-            "sale_attr2_key": "ge78bd6bd1321aaf",
-            "sale_attr2_val": "S"
-        },
-        "a1775af7fcb309a6_c434b0fba5876e45": {
-            "id": 70,
-            "attr": "【预售，预计4月中旬发货】运动裤-XL",
-            "market_price": 16900,
-            "price": 16900,
-            "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/2f79a72ff34ca5cb6d407a537f163201_1747068721330264208.jpeg",
-            "sale_attr1_key": "a1775af7fcb309a6",
-            "sale_attr1_val": "【预售，预计4月中旬发货】运动裤",
-            "sale_attr2_key": "c434b0fba5876e45",
-            "sale_attr2_val": "XL"
-        }
-    },
-    tag: 1,
-    main: [
-        '/Detail/9c501a999922df6cb126f0f0a47c257d_7565886165060741013.webp',
-        '/Detail/24af28bd8a458acfb06639c14a25df62_3348276678158040902.webp',
-        '/Detail/60c289a2dd2a2937b3188e83ce0ffc59_7957895813646762571.webp',
-        '/Detail/74dac6d66727207e7bf9695518ab0652_4462355820815659760.webp',
-        '/Detail/496e4cad7cc3ad1dbecf8b736d05ac9f_7303600227754070654.webp',
-        '/Detail/212886644adf69a80fe5fc4b0e6a5220_4708057767075243647.webp',
-        '/Detail/de65c08265dbbbaf5730af72f7c15e90_7047280733937849189.png',
-        '/Detail/e88adb1b8fb3e13c332c859c6c725f90_3249775645107742385.webp',
-        '/Detail/fb04647c67c802775df13952cd898800_5103199142852994790.webp',
-    ]
-})
 
-const currentImg = reactive({
-    url: data.banner[0],
-    i: 0
-})
+// const quantity = ref(1)
+const status: string[] = ['', '/Status/b62a22805ff37997c816cb91984d71be_1387051523058128219.png', '', '/Status/52a332d5a64c66bd3471f5ed39c35868_7340073586395887667.png']
 
-const handleMouseEnter = (url: string, i: number) => {
-    currentImg.url = url
-    currentImg.i = i
+// const banner = ["/ShopList/1528e043a2cd396f884128ac2962c1fb_5817809896503403958.jpeg", '/ShopList/15da4215c98796a8399492bf8fa3e62b_4584349108407072366.jpeg', '/ShopList/1ac56689afc06dc536d686f9b3e1daf4_4851491045914724997.jpeg']
+
+const main = [
+    '/Detail/9c501a999922df6cb126f0f0a47c257d_7565886165060741013.webp',
+    '/Detail/24af28bd8a458acfb06639c14a25df62_3348276678158040902.webp',
+    '/Detail/60c289a2dd2a2937b3188e83ce0ffc59_7957895813646762571.webp',
+    '/Detail/74dac6d66727207e7bf9695518ab0652_4462355820815659760.webp',
+    '/Detail/496e4cad7cc3ad1dbecf8b736d05ac9f_7303600227754070654.webp',
+    '/Detail/212886644adf69a80fe5fc4b0e6a5220_4708057767075243647.webp',
+    '/Detail/de65c08265dbbbaf5730af72f7c15e90_7047280733937849189.png',
+    '/Detail/e88adb1b8fb3e13c332c859c6c725f90_3249775645107742385.webp',
+    '/Detail/fb04647c67c802775df13952cd898800_5103199142852994790.webp',
+]
+
+// const data = reactive({
+//     banner: ["/ShopList/1528e043a2cd396f884128ac2962c1fb_5817809896503403958.jpeg", '/ShopList/15da4215c98796a8399492bf8fa3e62b_4584349108407072366.jpeg', '/ShopList/1ac56689afc06dc536d686f9b3e1daf4_4851491045914724997.jpeg'],
+//     name: '【原神】花语青风-蒙德主题系列服饰卫衣运动裤 Genshin',
+//     price: 8800,
+//     skus: [{
+//         "id": 68,
+//         "attr": "【预售，预计3月中旬发货】卫衣-2XL",
+//         "market_price": 28900,
+//         "price": 28900,
+//         "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/9ec84b2b782576bdadea21328a3c3fc4_3117940514605037149.jpeg",
+//         "sale_attr1_key": "类型",
+//         "sale_attr1_val": "【预售，预计3月中旬发货】卫衣",
+//         "sale_attr2_key": "规格（具体见尺码表）",
+//         "sale_attr2_val": "2XL"
+//     },
+//     {
+//         "id": 80,
+//         "attr": "【预售，预计4月中旬发货】运动裤-M",
+//         "market_price": 16900,
+//         "price": 16900,
+//         "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/2f79a72ff34ca5cb6d407a537f163201_7772943545422900048.jpeg",
+//         "sale_attr1_key": "a1775af7fcb309a6",
+//         "sale_attr1_val": "【预售，预计4月中旬发货】运动裤",
+//         "sale_attr2_key": "规格（具体见尺码表）",
+//         "sale_attr2_val": "M"
+//     }, {
+//         "id": 77,
+//         "attr": "【预售，预计3月中旬发货】卫衣-3XL",
+//         "market_price": 28900,
+//         "price": 28900,
+//         "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/9ec84b2b782576bdadea21328a3c3fc4_885488545817217120.jpeg",
+//         "sale_attr1_key": "fc3201a66b78c0ca",
+//         "sale_attr1_val": "【预售，预计3月中旬发货】卫衣",
+//         "sale_attr2_key": "规格（具体见尺码表）",
+//         "sale_attr2_val": "3XL"
+//     }, {
+//         "id": 71,
+//         "attr": "【预售，预计4月中旬发货】运动裤-L",
+//         "market_price": 16900,
+//         "price": 16900,
+//         "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/2f79a72ff34ca5cb6d407a537f163201_4474655492288973655.jpeg",
+//         "sale_attr1_key": "a1775af7fcb309a6",
+//         "sale_attr1_val": "【预售，预计4月中旬发货】运动裤",
+//         "sale_attr2_key": "规格（具体见尺码表）",
+//         "sale_attr2_val": "L"
+//     }, {
+//         "id": 72,
+//         "attr": "【预售，预计4月中旬发货】运动裤-2XL",
+//         "market_price": 16900,
+//         "price": 16900,
+//         "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/2f79a72ff34ca5cb6d407a537f163201_2797822829700822310.jpeg",
+//         "sale_attr1_key": "a1775af7fcb309a6",
+//         "sale_attr1_val": "【预售，预计4月中旬发货】运动裤",
+//         "sale_attr2_key": "规格（具体见尺码表）",
+//         "sale_attr2_val": "2XL"
+//     }, {
+//         "id": 75,
+//         "attr": "【预售，预计3月中旬发货】卫衣-M",
+//         "market_price": 28900,
+//         "price": 28900,
+//         "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/9ec84b2b782576bdadea21328a3c3fc4_573648175200565088.jpeg",
+//         "sale_attr1_key": "fc3201a66b78c0ca",
+//         "sale_attr1_val": "【预售，预计3月中旬发货】卫衣",
+//         "sale_attr2_key": "规格（具体见尺码表）",
+//         "sale_attr2_val": "M"
+//     }, {
+//         "id": 69,
+//         "attr": "【预售，预计3月中旬发货】卫衣-L",
+//         "market_price": 28900,
+//         "price": 28900,
+//         "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/9ec84b2b782576bdadea21328a3c3fc4_3462505051705178612.jpeg",
+//         "sale_attr1_key": "fc3201a66b78c0ca",
+//         "sale_attr1_val": "【预售，预计3月中旬发货】卫衣",
+//         "sale_attr2_key": "规格（具体见尺码表）",
+//         "sale_attr2_val": "L"
+//     }, {
+//         "id": 81,
+//         "attr": "【预售，预计4月中旬发货】运动裤-3XL",
+//         "market_price": 16900,
+//         "price": 16900,
+//         "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/2f79a72ff34ca5cb6d407a537f163201_9017073235929223059.jpeg",
+//         "sale_attr1_key": "a1775af7fcb309a6",
+//         "sale_attr1_val": "【预售，预计4月中旬发货】运动裤",
+//         "sale_attr2_key": "规格（具体见尺码表）",
+//         "sale_attr2_val": "3XL"
+//     }, {
+//         "id": 74,
+//         "attr": "【预售，预计3月中旬发货】卫衣-XS",
+//         "market_price": 28900,
+//         "price": 28900,
+//         "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/9ec84b2b782576bdadea21328a3c3fc4_4787737299736529525.jpeg",
+//         "sale_attr1_key": "fc3201a66b78c0ca",
+//         "sale_attr1_val": "【预售，预计3月中旬发货】卫衣",
+//         "sale_attr2_key": "规格（具体见尺码表）",
+//         "sale_attr2_val": "XS"
+//     }, {
+//         "id": 76,
+//         "attr": "【预售，预计3月中旬发货】卫衣-S",
+//         "market_price": 28900,
+//         "price": 28900,
+//         "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/9ec84b2b782576bdadea21328a3c3fc4_3624862993541767613.jpeg",
+//         "sale_attr1_key": "fc3201a66b78c0ca",
+//         "sale_attr1_val": "【预售，预计3月中旬发货】卫衣",
+//         "sale_attr2_key": "规格（具体见尺码表）",
+//         "sale_attr2_val": "S"
+//     }, {
+//         "id": 73,
+//         "attr": "【预售，预计3月中旬发货】卫衣-XL",
+//         "market_price": 28900,
+//         "price": 28900,
+//         "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/9ec84b2b782576bdadea21328a3c3fc4_3210091565929206342.jpeg",
+//         "sale_attr1_key": "fc3201a66b78c0ca",
+//         "sale_attr1_val": "【预售，预计3月中旬发货】卫衣",
+//         "sale_attr2_key": "规格（具体见尺码表）",
+//         "sale_attr2_val": "XL"
+//     }, {
+//         "id": 78,
+//         "attr": "【预售，预计4月中旬发货】运动裤-XS",
+//         "market_price": 16900,
+//         "price": 16900,
+//         "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/2f79a72ff34ca5cb6d407a537f163201_4015239940410625682.jpeg",
+//         "sale_attr1_key": "a1775af7fcb309a6",
+//         "sale_attr1_val": "【预售，预计4月中旬发货】运动裤",
+//         "sale_attr2_key": "规格（具体见尺码表）",
+//         "sale_attr2_val": "XS"
+//     }, {
+//         "id": 79,
+//         "attr": "【预售，预计4月中旬发货】运动裤-S",
+//         "market_price": 16900,
+//         "price": 16900,
+//         "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/2f79a72ff34ca5cb6d407a537f163201_2556223372845980260.jpeg",
+//         "sale_attr1_key": "a1775af7fcb309a6",
+//         "sale_attr1_val": "【预售，预计4月中旬发货】运动裤",
+//         "sale_attr2_key": "规格（具体见尺码表）",
+//         "sale_attr2_val": "S"
+//     }, {
+//         "id": 70,
+//         "attr": "【预售，预计4月中旬发货】运动裤-XL",
+//         "market_price": 16900,
+//         "price": 16900,
+//         "cover_url": "https://webstatic.mihoyo.com/upload/mall/2022/03/01/2f79a72ff34ca5cb6d407a537f163201_1747068721330264208.jpeg",
+//         "sale_attr1_key": "a1775af7fcb309a6",
+//         "sale_attr1_val": "【预售，预计4月中旬发货】运动裤",
+//         "sale_attr2_key": "规格（具体见尺码表）",
+//         "sale_attr2_val": "XL"
+//     }
+//     ],
+//     tag: 1,
+//     main: [
+//         '/Detail/9c501a999922df6cb126f0f0a47c257d_7565886165060741013.webp',
+//         '/Detail/24af28bd8a458acfb06639c14a25df62_3348276678158040902.webp',
+//         '/Detail/60c289a2dd2a2937b3188e83ce0ffc59_7957895813646762571.webp',
+//         '/Detail/74dac6d66727207e7bf9695518ab0652_4462355820815659760.webp',
+//         '/Detail/496e4cad7cc3ad1dbecf8b736d05ac9f_7303600227754070654.webp',
+//         '/Detail/212886644adf69a80fe5fc4b0e6a5220_4708057767075243647.webp',
+//         '/Detail/de65c08265dbbbaf5730af72f7c15e90_7047280733937849189.png',
+//         '/Detail/e88adb1b8fb3e13c332c859c6c725f90_3249775645107742385.webp',
+//         '/Detail/fb04647c67c802775df13952cd898800_5103199142852994790.webp',
+//     ]
+// })
+
+interface good {
+    checked: boolean
+    coverUrl: string
+    goodsId: string
+    id: number
+    isSoldOut: number
+    marketPrice: number
+    name: string
+    price: number
+    quantity: number
+    saleTime: string
+    tag: number
 }
 
-const handleToOrderConfirm = (id: number): void => {
+const data = reactive<good[]>([])
+
+// const currentImg = reactive({
+//     url: banner[0],
+//     i: 0
+// })
+// const handleMouseEnter = (url: string, i: number) => {
+//     currentImg.url = url
+//     currentImg.i = i
+// }
+
+type callback = () => void
+
+const handleValidate = (cb: callback) => {
+    if (sessionStorage.getItem('user')) {
+        cb()
+    } else {
+        emitter.emit('toLogin', true)
+    }
+}
+
+const handleToOrderConfirm = (): void => {
+    sessionStorage.setItem('order', JSON.stringify(data))
     router.push({
         name: 'OrderConfirm',
-        params: {
-            id
-        }
     })
 }
+
+const handleAddToCart = () => {
+    request.post('/cart', {
+        goodsId: data[0].id,
+        userId: JSON.parse(sessionStorage.getItem('user') ?? '').id,
+        quantity: data[0].quantity
+    }).then(res => {
+        console.log('add to cart', res)
+    })
+}
+
+const load = (id: string) => {
+    request.get(`/goods/${id}`).then((res) => {
+        console.log(res)
+        const tmp = res.data
+        tmp.quantity = 1
+        data.push(tmp)
+    })
+}
+const route = useRoute()
+
+onMounted(() => {
+    console.log(route)
+    load(route.params.id as string)
+})
+
+onBeforeRouteUpdate((to) => {
+    console.log('route', to.params)
+    load(to.params.id as string)
+})
 </script>
 
 <style scoped>
@@ -371,6 +440,8 @@ img.img_active {
     margin-left: -12px;
     width: 100%;
     line-height: 48px;
+    color: #ff6d6d;
+    font-weight: 700;
 }
 .unit {
     font-size: 24px;
@@ -432,54 +503,6 @@ img.img_active {
     padding: 0;
     opacity: 0;
     pointer-events: none;
-}
-.input_number {
-    display: inline-flex;
-    align-items: stretch;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #f3f3f4;
-    background-color: #fff;
-}
-.input_number input {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 50px;
-    padding: 6px 7px;
-    font-size: 14px;
-    color: #16162e;
-    line-height: 20px;
-    border-left: 1px solid #f3f3f4;
-    border-right: 1px solid #f3f3f4;
-    border-top: none;
-    border-bottom: none;
-    border-radius: none;
-    box-shadow: none;
-    outline: none;
-    appearance: none;
-    text-align: center;
-}
-.input_number button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 32px;
-    height: 32px;
-    color: #9696a1;
-    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    background-color: transparent;
-    vertical-align: initial;
-    outline: none;
-    border: none;
-}
-.input_number .disable {
-    color: #f3f3f4;
-    cursor: not-allowed;
-}
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
 }
 .stock {
     color: #9696a1;
