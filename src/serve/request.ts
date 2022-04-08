@@ -16,21 +16,21 @@ request.interceptors.request.use(config => {
 })
 
 // response 拦截器
-request.interceptors.response.use(response => {
-    let res = response.data
+// request.interceptors.response.use(response => {
+//     let res = response.data
 
-    if (response.config.responseType === 'blob') {
-        return res
-    }
+//     if (response.config.responseType === 'blob') {
+//         return res
+//     }
 
-    if (typeof res === 'string') {
-        res = res ? JSON.parse(res) : res
-    }
+//     if (typeof res === 'string') {
+//         res = res ? JSON.parse(res) : res
+//     }
 
-    return res
-}, error => {
-    console.log(`err${error}`)
-    return Promise.reject(error)
-})
+//     return res
+// }, error => {
+//     console.log(`err${error}`)
+//     return Promise.reject(error)
+// })
 
 export default request

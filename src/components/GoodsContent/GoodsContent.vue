@@ -7,7 +7,7 @@
                 <template v-for="item in goods" :key="item.id">
                     <div class="good_card" @click="handleToDetail(item.id)">
                         <div class="good_img">
-                            <img :src="item.coverUrl" />
+                            <img :src="item.cover_url" />
                         </div>
                         <div class="good_info">
                             <div class="good_title">
@@ -40,19 +40,18 @@ import Breadcrumb from '../Breadcrumb/Breadcrumb.vue'
 import OrderPanel from '../OrderPanel/OrderPanel.vue'
 import Price from '../Price/Price.vue'
 import Paginate from '../Paginate/Paginate.vue'
-import request from '@/serve/request';
 import { ref, Ref, reactive, inject, watchEffect, onMounted } from 'vue';
 import { onBeforeRouteUpdate } from 'vue-router'
+import { base } from '@/serve/base-http.service';
 
 interface good {
-    coverUrl: string
-    goodsId: string
+    cover_url: string
     id: number
-    isSoldOut: number
-    marketPrice: number
+    total_stock: number
+    market_price: number
     name: string
     price: number
-    saleTime: string
+    sale_time: string
     tag: number
 }
 
@@ -60,8 +59,6 @@ const total = ref(0)
 const pageSize = ref(40)
 const pages = ref(1)
 const currentPage = ref(1)
-
-const search = ref('')
 
 const goods = reactive<good[]>([])
 
@@ -74,18 +71,18 @@ watchEffect(() => {
 })
 
 const load = () => {
-    request.get('/goods', {
-        params: {
-            pageSize: pageSize.value,
-            pageNum: currentPage.value,
-            search: search.value
-        }
-    }).then(res => {
-        total.value = res.data.total
-        pages.value = res.data.pages
-        goods.length = 0
-        goods.push(...res.data.records)
+    base.post('goods', {
+        page_size: pageSize.value,
+        current_page: currentPage.value,
+    }).then((res) => {
         console.log(res);
+        total.value = res?.data.total
+        pages.value = Math.round(res?.data.total / pageSize.value)
+        goods.length = 0
+        goods.push(...res?.data.goods.map((item: { cover_url: string }) => {
+    item.cover_url = `http://localhost:5091${item.cover_url}`
+    return item
+}))
     })
 }
 
@@ -97,7 +94,7 @@ const handlePageChange = (next: number) => {
 const handleToDetail = (id: number): void => {
     console.log(id)
     router.push({
-        name: 'Detail',
+        name: 'GoodDetail',
         params: {
             id
         }

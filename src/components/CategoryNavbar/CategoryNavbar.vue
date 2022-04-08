@@ -54,8 +54,9 @@
 </template>
 
 <script setup lang="ts">
-import request from '@/serve/request';
+import { base } from '@/serve/base-http.service';
 import { defineEmits, reactive, ref } from 'vue'
+
 const defaultItem = ref('全部商品')
 interface category {
     id: number
@@ -72,12 +73,12 @@ const handleToCategory = (category: string) => {
 }
 
 const load = () => {
-    request.get('/category').then(res => {
+    base.get('categories').then(res => {
+        console.log(res);
         categores1.length = 0
         categores2.length = 0
-        categores1.push(...res.data)
+        categores1.push(...res?.data)
         categores2.push(categores1.pop() as category)
-        console.log(res);
     })
 }
 

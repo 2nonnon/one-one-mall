@@ -40,7 +40,7 @@
                 <div class="cart" @click="handleValidate(handleToCart)">
                     <div class="cart_icon">O</div>
                     <div class="cart_text">购物车</div>
-                    <!-- <div class="cart_count" v-if="count > 0">{{ count }}</div> -->
+                    <div class="cart_count" v-if="count > 0">{{ count }}</div>
                 </div>
             </div>
         </div>
@@ -51,7 +51,7 @@
 import router from '@/router';
 import { emitter } from '../../util/emitter'
 import { ref, onMounted } from 'vue'
-import request from '@/serve/request';
+import {base} from '@/serve/base-http.service';
 
 const count = ref(0)
 const value = ref('')
@@ -95,17 +95,16 @@ const handleValidate = (cb: callback) => {
 }
 
 const handleQuit = () => {
-    sessionStorage.removeItem('user')
+    base.removeToken()
     checkLogin()
 }
 
 const checkLogin = () => {
-    const user = sessionStorage.getItem('user')
-    if (user) {
+    const accessToken = base.loadToken()
+    if (accessToken) {
         isLogined.value = true
+        getCartCount()
         avatar.value = '/Header/avatar40017.webp'
-        const userId = JSON.parse(user).id
-        getCartCount(userId)
     } else {
         isLogined.value = false
         avatar.value = '/Header/profile.png'
@@ -114,9 +113,10 @@ const checkLogin = () => {
 
 emitter.on('logined', checkLogin)
 
-const getCartCount = (userId: number) => {
-    request.get('/cart', { params: { userId } }).then((res) => {
-        count.value = res.data.length
+const getCartCount = () => {
+    base.get('carts/total').then((res) => {
+        console.log('total cart', res)
+        count.value = res?.data
     })
 }
 

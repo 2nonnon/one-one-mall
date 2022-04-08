@@ -5,8 +5,8 @@
             <div class="info_container">
                 <img src="/Header/avatar40017.webp" class="avator" />
                 <div class="info_content">
-                    <div class="info_name">{{userInfo.username}}</div>
-                    <div class="info_uid">{{userInfo.id}}</div>
+                    <div class="info_name">{{ userInfo.username }}</div>
+                    <div class="info_uid">AID: {{ userInfo.id }}</div>
                 </div>
             </div>
         </div>
@@ -44,8 +44,8 @@
                             <div class="tab_item">待收货</div>
                         </div>
                     </div>
-                    <div class="cart_body">
-                        <div class="order_card" v-for="order in orderInfo" :key="order.orderId">
+                    <div class="cart_body" v-if="data.length > 0">
+                        <div class="order_card" v-for="order in data" :key="order.id">
                             <div class="main_title">
                                 <div class="title_icon">M</div>
                                 <div class="text">原神万有铺子</div>
@@ -54,21 +54,23 @@
                                 <div class="good_list">
                                     <div
                                         class="good_card"
-                                        v-for="item in order.goods"
-                                        :key="item.goodsId"
+                                        v-for="item in order.orderDetails"
+                                        :key="item.id"
                                     >
                                         <div class="cart_goods">
                                             <div class="good_img">
-                                                <img :src="item.coverUrl" />
+                                                <img
+                                                    :src="`http://localhost:5091${item.cover_url}`"
+                                                />
                                             </div>
                                             <div class="good_info">
                                                 <div class="good_name">{{ item.name }}</div>
-                                                <!-- <div class="good_attr">甘雨-璃月港的一夜</div> -->
+                                                <div class="good_attr">{{ item.attr }}</div>
                                             </div>
                                         </div>
                                         <div class="cart_price">
                                             <price
-                                                :price="[item.marketPrice]"
+                                                :price="[item.market_price]"
                                                 :has-fix="true"
                                                 :cur-font="16"
                                                 :num-font="16"
@@ -79,14 +81,15 @@
                                 </div>
                                 <div class="order_item_col order_fee">
                                     <price
-                                        :price="[order.cost]"
+                                        :price="[order.paid]"
                                         :has-fix="true"
                                         :cur-font="16"
                                         :num-font="16"
                                     ></price>
                                 </div>
                                 <div class="order_item_col order_info">
-                                    <span>订单详情</span>
+                                    <button type="button" class="order_info_btn button-m">付款</button>
+                                    <span @click="handleToOrderDetail(order.id)">订单详情</span>
                                 </div>
                             </div>
                         </div>
@@ -100,31 +103,43 @@
 <script setup lang="ts">
 import Breadcrumb from '@/components/Breadcrumb/Breadcrumb.vue'
 import Price from '@/components/Price/Price.vue'
-// import router from '@/router';
-import request from '@/serve/request';
+import router from '@/router';
+import { base } from '@/serve/base-http.service';
 import { onMounted, reactive } from 'vue'
 
-interface good {
-    checked: boolean
-    coverUrl: string
-    goodsId: string
-    id: number
-    isSoldOut: number
-    marketPrice: number
-    name: string
-    price: number
-    quantity: number
-    saleTime: string
-    tag: number
+enum OrderStatus {
+    TO_PAID = 'TO_PAID',
+    TO_SEND = 'TO_SEND',
+    TO_DEAL = 'TO_DEAL',
+    TO_SERVICE = 'TO_SERVICE',
+    HAS_CLOSED = 'HAS_CLOSED',
 }
 
-interface order {
-    orderId: string
-    cost: number
-    goods: good[]
+interface OrderDetail {
+    id: string;
+    goodId: number;
+    cover_url: string;
+    name: string;
+    attr: string;
+    quantity: number;
+    market_price: number;
+    paid: number;
+    status: OrderStatus;
+    deal_time?: string;
 }
 
-const orderInfo = reactive<order[]>([])
+interface Order {
+    id: string;
+    receive_info?: string;
+    paid: number;
+    status: OrderStatus;
+    create_time: string;
+    paid_time?: string;
+    send_time?: string;
+    deal_time?: string;
+    orderDetails: OrderDetail[];
+}
+const data = reactive<Order[]>([])
 
 interface user {
     username: string
@@ -136,36 +151,33 @@ const userInfo = reactive<user>({
     id: ''
 })
 
-onMounted(() => {
-    const user = JSON.parse(sessionStorage.getItem('user') ?? '')
-    const userId = user?.id
-    userInfo.id = userId
-    userInfo.username = user.username
+const getUserInfo = () => {
+    base.get('users').then((res) => {
+        console.log('user', res)
+        Object.assign(userInfo, res?.data)
+    })
+}
 
-    request.get('order', {params: {search: userId}}).then(res => {
-        console.log('ordeeeeer', res.data.records)
-        const orders = res.data.records
-        Promise.all(res.data.records.map((item: { serialnumber: string; }) => {
-            return request.get('/orderDetail', {params: {serialnumber: item.serialnumber}})
-        })).then(result => {
-            console.log('detaaaaail', result)
-            Promise.all(result.map(item => {
-                return request.post('/goods/selectBatch', item.data.map((detail: {goodsId: number}) => detail.goodsId))
-            })).then(tmp => {
-                console.log('goooood', tmp)
-                for (let i = 0; i < orders.length; i++) {
-                    const order = {} as order
-                    order.orderId = orders[i].serialnumber
-                    order.cost = orders[i].cost
-                    tmp[i].data.forEach((item: {quantity: number}, index: number) => {
-                        item.quantity = result[i].data[index].quantity
-                    })
-                    order.goods = [...tmp[i].data]
-                    orderInfo.push(order)
-                }
-            })
-        })
-    }) 
+const handleToOrderDetail = (orderId: string) => {
+    router.push({
+        name: 'Order',
+        params: {
+            orderId
+        }
+    })
+}
+
+const load = () => {
+    base.get(`orders`).then((res) => {
+        console.log('orders', res)
+        data.length = 0
+        data.push(...res?.data)
+    })
+}
+
+onMounted(() => {
+    load()
+    getUserInfo()
 })
 </script>
 
@@ -443,6 +455,7 @@ onMounted(() => {
     line-height: 24px;
 }
 .order_info > span {
+    cursor: pointer;
     color: #519bde;
 }
 .good_card:first-child {
@@ -450,5 +463,23 @@ onMounted(() => {
 }
 .good_card:last-child {
     padding-bottom: 0;
+}
+.order_info_btn {
+    color: #ff6d6d;
+    margin-bottom: 8px;
+    background-color: #fff;
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    border: solid #ff6d6d;
+    cursor: pointer;
+}
+.button-m {
+    min-width: 102px;
+    height: 40px;
+    font-size: 16px;
+    line-height: 22px;
+    border-radius: 6px;
+    border-width: 2px;
+    padding: 0 10px;
+    font-weight: 700;
 }
 </style>

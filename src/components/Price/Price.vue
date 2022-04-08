@@ -38,16 +38,18 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), { currency: 'CNY', split: 'dot', range: false, hasFix: false, numFont: 24, curFont: 18 })
 
 const parsePrice = (cureency: string, split: string, range: boolean, price: number[]) => {
-    price.sort((a, b) => a - b)
-    const max = price[price.length - 1]
-    const min = price[0]
-    priceData.currency = map[cureency]
-    priceData.split = map[split]
-    priceData.integer = min === 0 ? '0' : min.toString().slice(0, -2)
-    if (range) {
-        priceData.decimal = max === 0 ? '00' : max.toString().slice(0, -2)
-    } else {
-        priceData.decimal = min === 0 ? '00' : min.toString().slice(-2)
+    if (price.length) {
+        price.sort((a, b) => a - b)
+        const max = price[price.length - 1]
+        const min = price[0]
+        priceData.currency = map[cureency]
+        priceData.split = map[split]
+        priceData.integer = min === 0 ? '0' : `${min}`.slice(0, -2)
+        if (range) {
+            priceData.decimal = max === 0 ? '00' : `${max}`.slice(0, -2)
+        } else {
+            priceData.decimal = min === 0 ? '00' : `${min}`.slice(-2)
+        }
     }
 }
 

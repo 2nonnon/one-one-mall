@@ -1,14 +1,14 @@
 <template>
     <div class="loading">
-        <div class="good_detail" v-if="data[0]">
+        <div class="good_detail" v-if="data">
             <div class="detail_head">
                 <div class="img_swiper">
                     <div class="swiper_main">
-                        <img :src="data[0].coverUrl" />
+                        <img :src="`http://localhost:5091${data?.cover_url}`" />
                         <!-- <img :src="currentImg.url" /> -->
                     </div>
                     <div class="swiper_item">
-                        <img class="img_active" :src="data[0].coverUrl" />
+                        <img class="img_active" :src="`http://localhost:5091${data?.cover_url}`" />
                     </div>
                     <!-- <div class="swiper_item">
                         <img
@@ -23,13 +23,13 @@
                 <div class="detail_info">
                     <div class="detail_title">
                         <div class="good_status">
-                            <img :src="status[data[0].tag]" />
+                            <img :src="status[data?.tag]" />
                         </div>
-                        {{ data[0]?.name }}
+                        {{ data?.name }}
                     </div>
                     <div class="detail_prices">
                         <price
-                            :price="[data[0].marketPrice]"
+                            :price="[data?.market_price ?? 0]"
                             :range="false"
                             :hasFix="false"
                             split="dash"
@@ -43,7 +43,7 @@
                             <div class="checkbox_group">
                                 <label class="checkbox_item checked">
                                     <input type="checkbox" />
-                                    {{ data[0].name }}
+                                    {{ data?.name }}
                                 </label>
                             </div>
                         </div>
@@ -75,7 +75,7 @@
                         </div>-->
                         <div class="sku_row">
                             <div class="sku_title">数量</div>
-                            <counter v-model="data[0].quantity"></counter>
+                            <counter v-model="quantity"></counter>
                             <div class="stock">库存445件</div>
                         </div>
                     </div>
@@ -96,14 +96,14 @@
 <script setup lang="ts">
 import Price from '../../components/Price/Price.vue'
 import Counter from '../../components/Counter/Counter.vue'
-import request from '@/serve/request';
 import router from '@/router';
-import { onBeforeRouteUpdate, useRoute } from 'vue-router';
-import { reactive, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { reactive, onMounted, ref } from 'vue';
 import { emitter } from '@/util/emitter';
+import { base } from '@/serve/base-http.service';
 
 
-// const quantity = ref(1)
+const quantity = ref(1)
 const status: string[] = ['', '/Status/b62a22805ff37997c816cb91984d71be_1387051523058128219.png', '', '/Status/52a332d5a64c66bd3471f5ed39c35868_7340073586395887667.png']
 
 // const banner = ["/ShopList/1528e043a2cd396f884128ac2962c1fb_5817809896503403958.jpeg", '/ShopList/15da4215c98796a8399492bf8fa3e62b_4584349108407072366.jpeg', '/ShopList/1ac56689afc06dc536d686f9b3e1daf4_4851491045914724997.jpeg']
@@ -280,25 +280,42 @@ const main = [
 //         '/Detail/fb04647c67c802775df13952cd898800_5103199142852994790.webp',
 //     ]
 // })
+interface Attribute {
+    id: number
+    name: string
+    parentId: number
+}
+
+interface Sku {
+    id: number
+    name: string
+    img_url: string
+    market_price: number
+    price: number
+    sold: number
+    stock: number
+    good: number
+    attributes: Attribute[]
+}
 
 interface good {
     checked: boolean
-    coverUrl: string
-    goodsId: string
+    cover_url: string
     id: number
-    isSoldOut: number
-    marketPrice: number
+    total_stock: number
+    market_price: number
     name: string
     price: number
-    quantity: number
-    saleTime: string
+    sale_time: string
     tag: number
+    attributes: { [Propname: string]: string[] }
+    skus: Sku[]
 }
 
-const data = reactive<good[]>([])
+const data = reactive<good>({} as good)
 
 // const currentImg = reactive({
-//     url: banner[0],
+//     url: banner,
 //     i: 0
 // })
 // const handleMouseEnter = (url: string, i: number) => {
@@ -309,7 +326,7 @@ const data = reactive<good[]>([])
 type callback = () => void
 
 const handleValidate = (cb: callback) => {
-    if (sessionStorage.getItem('user')) {
+    if (base.loadToken()) {
         cb()
     } else {
         emitter.emit('toLogin', true)
@@ -317,40 +334,47 @@ const handleValidate = (cb: callback) => {
 }
 
 const handleToOrderConfirm = (): void => {
-    sessionStorage.setItem('order', JSON.stringify(data))
-    router.push({
-        name: 'OrderConfirm',
+    base.post('orders', {
+        paid: quantity.value * data.market_price,
+        orderDetails: [{
+            goodId: data.id,
+            cover_url: data.cover_url,
+            name: data.name,
+            attr: data.name,
+            quantity: quantity.value,
+            market_price: data.market_price,
+            paid: quantity.value * data.market_price,
+        }]
+    }).then(res => {
+        console.log(res)
+        router.push({
+            name: 'OrderConfirm',
+            params: {
+                orderId: res?.data.id
+            }
+        })
     })
 }
 
 const handleAddToCart = () => {
-    request.post('/cart', {
-        goodsId: data[0].id,
-        userId: JSON.parse(sessionStorage.getItem('user') ?? '').id,
-        quantity: data[0].quantity
+    base.post('carts', {
+        skuId: data?.skus[0].id,
+        quantity: quantity.value
     }).then(res => {
         console.log('add to cart', res)
     })
 }
 
 const load = (id: string) => {
-    request.get(`/goods/${id}`).then((res) => {
+    base.get(`goods/detail/${id}`).then((res) => {
         console.log(res)
-        const tmp = res.data
-        tmp.quantity = 1
-        data.push(tmp)
+        Object.assign(data, res?.data)
     })
 }
-const route = useRoute()
 
 onMounted(() => {
-    console.log(route)
+    const route = useRoute()
     load(route.params.id as string)
-})
-
-onBeforeRouteUpdate((to) => {
-    console.log('route', to.params)
-    load(to.params.id as string)
 })
 </script>
 

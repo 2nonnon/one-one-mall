@@ -29,16 +29,22 @@ const routes: Array<RouteRecordRaw> = [
           import(/* webpackChunkName: "about" */ '../views/Cart/Cart.vue'),
       },
       {
-        path: '/detail/:id',
-        name: 'Detail',
+        path: '/good/:id',
+        name: 'GoodDetail',
         component: () =>
           import(/* webpackChunkName: "about" */ '../views/GoodDetail/GoodDetail.vue'),
       },
       {
-        path: '/orderConfirm',
+        path: '/confirm/:orderId',
         name: 'OrderConfirm',
         component: () =>
           import(/* webpackChunkName: "about" */ '../views/OrderConfirm/OrderConfirm.vue'),
+      },
+      {
+        path: '/order/:orderId',
+        name: 'Order',
+        component: () =>
+          import(/* webpackChunkName: "about" */ '../views/Order/Order.vue'),
       },
     ],
   },

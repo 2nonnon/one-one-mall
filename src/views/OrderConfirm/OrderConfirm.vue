@@ -7,17 +7,20 @@
                     <div class="address_icon">A</div>
                     <div class="title_text">收货地址</div>
                 </div>
-                <button class="select">选择其他地址</button>
+                <button class="select" v-if="hasAddress" @click="handleOpenChooseAddress">选择其他地址</button>
             </div>
-            <div>
+            <div v-if="hasAddress">
                 <div class="wrapper font-lg">
-                    <span>{{ orderAdress.name }}</span>
-                    <span>{{ `${orderAdress.mobile.slice(0, 3)}****${orderAdress.mobile.slice(7)}` }}</span>
+                    <span>{{ address.receiver }}</span>
+                    <span>{{ `${address.mobile.slice(0, 3)}****${address.mobile.slice(7)}` }}</span>
                 </div>
-                <div class="font-lg address_info">{{ orderAdress.address }}</div>
+                <div class="font-lg address_info">{{ address.destination }}</div>
+            </div>
+            <div class="address_add font-lg" v-else  @click="handleOpenChooseAddress">
+            <span>添加收货地址</span>
             </div>
         </div>
-        <div class="order_body">
+        <div class="order_body" v-if="data.id">
             <div class="item_container mb-16">
                 <div class="title">
                     <div class="address_icon">H</div>
@@ -36,19 +39,19 @@
                     <div class="text">原神万有铺子</div>
                 </div>
                 <div>
-                    <div class="good_card" v-for="item in goods" :key="item.goodsId">
+                    <div class="good_card" v-for="item in data.orderDetails" :key="item.id">
                         <div class="cart_goods">
                             <div class="good_img">
-                                <img :src="item.coverUrl" />
+                                <img :src="`http://localhost:5091${item.cover_url}`" />
                             </div>
                             <div class="good_info">
                                 <div class="good_name">{{ item.name }}</div>
-                                <!-- <div class="good_attr">甘雨-璃月港的一夜</div> -->
+                                <div class="good_attr">{{ item.attr }}</div>
                             </div>
                         </div>
                         <div class="cart_price">
                             <price
-                                :price="[item.marketPrice]"
+                                :price="[item.market_price]"
                                 :has-fix="true"
                                 :cur-font="16"
                                 :num-font="16"
@@ -57,7 +60,7 @@
                         <div class="cart_count font-lg">x{{ item.quantity }}</div>
                         <div class="cart_total red">
                             <price
-                                :price="[item.marketPrice * item.quantity]"
+                                :price="[item.paid]"
                                 :has-fix="true"
                                 :cur-font="16"
                                 :num-font="16"
@@ -99,22 +102,23 @@
                 <div class="info_row">
                     <div class="row_label">总计：</div>
                     <div class="row_value red">
-                        <price :price="[total]" :has-fix="true" :cur-font="18" :num-font="18"></price>
+                        <price :price="[data.paid]" :has-fix="true" :cur-font="18" :num-font="18"></price>
                     </div>
                 </div>
-                <div class="mt-20 text-right">
+                <div class="mt-20 text-right" v-if="hasAddress">
                     <div class="truncate">
                         <span class="text-patch">寄送至</span>
-                        <span>{{ orderAdress.name }} {{ `${orderAdress.mobile.slice(0, 3)}****${orderAdress.mobile.slice(7)}` }}</span>
+                        <span>{{ address.receiver }} {{ `${address.mobile.slice(0, 3)}****${address.mobile.slice(7)}` }}</span>
                     </div>
-                    <div>{{ orderAdress.address }}</div>
+                    <div>{{ address.destination }}</div>
                 </div>
                 <div class="mt-12">
-                    <button class="buy" @click="handleSettle">提交订单</button>
+                    <button class="buy" :disabled="!hasAddress" @click="handleSettle">提交订单</button>
                 </div>
             </div>
         </div>
     </div>
+    <ChooseAddressDialog @close-address="handleCloseChooseAddress" @choose-address="handleChooseAddress" v-if="showChooseAddressDialog"></ChooseAddressDialog>
 </template>
 
 <script lang="ts">
@@ -123,78 +127,110 @@ export default { name: 'OrderConfirm' }
 
 <script setup lang="ts">
 import Price from '@/components/Price/Price.vue'
+import ChooseAddressDialog from '@/components/ChooseAddressDialog/ChooseAddressDialog.vue'
+import { base } from '@/serve/base-http.service';
+import { onMounted, reactive, computed, ref, watchEffect } from 'vue'
+import { useRoute } from 'vue-router';
 import router from '@/router';
-import request from '@/serve/request';
-import { onMounted, reactive, computed } from 'vue'
 
-interface good {
-    checked: boolean
-    coverUrl: string
-    goodsId: string
-    id: number
-    isSoldOut: number
-    marketPrice: number
-    name: string
-    price: number
-    quantity: number
-    saleTime: string
-    tag: number
+enum OrderStatus {
+    TO_PAID = 'TO_PAID',
+    TO_SEND = 'TO_SEND',
+    TO_DEAL = 'TO_DEAL',
+    TO_SERVICE = 'TO_SERVICE',
+    HAS_CLOSED = 'HAS_CLOSED',
 }
-const goods = reactive<good[]>([])
-const total = computed(() => {
-    return goods.reduce((pre, cur) => {
-        return pre + cur.marketPrice * cur.quantity
-    }, 0)
-})
 
-const orderAdress = reactive({
-    userId: '',
-    name: '',
-    mobile: '',
-    address: ''
-})
+interface OrderDetail {
+    id: string;
+    goodId: number;
+    cover_url: string;
+    name: string;
+    attr: string;
+    quantity: number;
+    market_price: number;
+    paid: number;
+    status: OrderStatus;
+    deal_time?: string;
+}
 
-const getAddress = (userId: number) => {
-    request.get('/address', { params: { search: userId } }).then((res) => {
-        console.log('地址', res.data.records[0])
-        orderAdress.address = res.data.records[0].address
+interface Order {
+    id: string;
+    receive_info?: string;
+    paid: number;
+    status: OrderStatus;
+    create_time: string;
+    paid_time?: string;
+    send_time?: string;
+    deal_time?: string;
+    orderDetails: OrderDetail[];
+}
+const data = reactive<Order>({} as Order)
+
+enum AddressIsDefault {
+    IsDefault = 1,
+    IsNotDefaylt = 0,
+}
+
+interface Address {
+    id: string
+    receiver: string
+    mobile: string
+    destination: string
+    remark: string
+    isDefault: AddressIsDefault
+}
+
+const showChooseAddressDialog = ref(false)
+
+const handleOpenChooseAddress = () => {
+    showChooseAddressDialog.value = true
+}
+const handleCloseChooseAddress = () => {
+    showChooseAddressDialog.value = false
+}
+
+const address = reactive<Address>({} as Address)
+const hasAddress = computed(() => Boolean(address.id))
+
+const getDefaultAddress = () => {
+    base.get('addresses/default').then((res) => {
+        Object.assign(address, res?.data)
     })
 }
 
+const handleChooseAddress = (data: Address) => {
+    console.log('choose address', data)
+    Object.assign(address, data)
+}
+
 const handleSettle = () => {
-    request.post('/order', {
-        userId: orderAdress.userId,
-        mobile: orderAdress.mobile,
-        receiver: orderAdress.name,
-        address: orderAdress.address,
-        cost: total.value
+    base.patch(`orders/${data.id}`, {
+        receive_info: data.receive_info,
+        status: OrderStatus.TO_PAID
     }).then(res => {
-        console.log(res)
-        Promise.all(goods.map(good => {
-            return request.post('/orderDetail', {
-                orderId: res.data,
-                goodsId: good.id,
-                quantity: good.quantity,
-                cost: good.marketPrice * good.quantity
-            })
-        })).then(result => {
-            console.log(result)
-        })
-        router.push({
+        console.log('settle', res)
+        router.replace({
             name: 'User'
         })
     })
 }
 
+const load = (id: string) => {
+    base.get(`orders/${id}`).then((res) => {
+        console.log(res)
+        Object.assign(data, res?.data)
+    })
+}
+
+watchEffect(() => {
+    data.receive_info = `${address.receiver} ${address.mobile} ${address.destination}`
+})
+
 onMounted(() => {
-    const data: good[] = JSON.parse(sessionStorage.getItem('order') ?? '')
-    goods.push(...data)
-    const user = JSON.parse(sessionStorage.getItem('user') ?? '')
-    const userId = user?.id
-    if (userId) getAddress(userId)
-    orderAdress.userId = userId
-    orderAdress.name = user.username
-    orderAdress.mobile = user.mobile
+    const route = useRoute()
+    load(route.params.orderId as string)
+    getDefaultAddress()
 })
 </script>
 
@@ -277,6 +313,29 @@ onMounted(() => {
     color: #9696a1;
     margin-top: 8px;
 }
+.address_add {
+    position: relative;
+    height: 62px;
+    line-height: 62px;
+    border: 1px solid #eff1f4;
+    padding-left: 58px;
+    color: #519bde;
+    cursor: pointer;
+}
+.address_add::before,
+.address_add::after {
+    content: "";
+    position: absolute;
+    left: 36px;
+    top: 50%;
+    margin-top: -6px;
+    width: 2px;
+    background-color: #519bde;
+    height: 12px;
+}
+.address_add::before {
+    transform: rotate(90deg);
+}
 .mb-16 {
     margin-bottom: 16px;
 }
@@ -345,13 +404,6 @@ div.cart_action {
     font-size: 14px;
     color: #9696a1;
 }
-.price {
-    font-size: 16px;
-}
-.currency {
-    padding-right: 2px;
-}
-
 .main_title {
     display: flex;
     align-items: center;
@@ -498,7 +550,13 @@ button.buy {
     height: 100%;
     transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-.buy:hover::after {
+.buy:hover:not(:disabled)::after {
     opacity: 1;
+}
+button:disabled {
+    color: #c5c5cb;
+    background-color: #f3f3f4;
+    border-color: #f3f3f4;
+    cursor: not-allowed;
 }
 </style>

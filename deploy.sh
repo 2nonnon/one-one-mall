@@ -27,5 +27,5 @@ git commit -m '$1'
 # git push -f git@github.com:2nonnon/a-blog.git main:gh-pages
 # git push -f https://github.com/2nonnon/2nonnon.GitHub.io.git master:main
 git push
-
+# git push -u origin master:local
 cd -

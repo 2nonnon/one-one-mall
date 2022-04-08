@@ -2,11 +2,11 @@
 <div class="container">
     <Header></Header>
     <router-view />
-    <Login></Login>
+    <LoginDialog></LoginDialog>
 </div>
 </template>
 
 <script setup lang="ts">
 import Header from '../components/Header/Header.vue'
-import Login from '../components/Login/Login.vue'
+import LoginDialog from '../components/Login/LoginDialog.vue'
 </script>

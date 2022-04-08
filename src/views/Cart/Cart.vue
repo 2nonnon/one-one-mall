@@ -20,15 +20,15 @@
                     </div>
                 </div>
                 <div class="checkbox_group">
-                    <div class="goods_list">
-                        <div class="good_card" v-for="item in data" :key="item.goodsId">
+                    <div class="goods_list" v-if="data.length > 0">
+                        <div class="good_card" v-for="item in data" :key="item.id">
                             <checkbox v-model:checked="item.checked" @click="handleCheck"></checkbox>
                             <div class="cart_goods">
                                 <div class="good_img">
-                                    <img :src="item.coverUrl" />
+                                    <img :src="`http://localhost:5091${item.sku.img_url}`" />
                                 </div>
                                 <div class="good_info">
-                                    <div class="good_name">{{ item.name }}</div>
+                                    <div class="good_name">{{ item.sku.name }}</div>
                                     <!-- <div class="good_attr">甘雨-璃月港的一夜</div> -->
                                 </div>
                             </div>
@@ -37,7 +37,7 @@
                                     :num-font="16"
                                     :cur-font="16"
                                     :has-fix="true"
-                                    :price="[item.marketPrice]"
+                                    :price="[item.sku.market_price]"
                                 ></price>
                             </div>
                             <div class="cart_count">
@@ -48,12 +48,12 @@
                                     :num-font="16"
                                     :cur-font="16"
                                     :has-fix="true"
-                                    :price="[item.marketPrice * item.quantity]"
+                                    :price="[item.sku.market_price * item.quantity]"
                                 ></price>
                             </div>
                             <div class="cart_action">
                                 <div class="delete">
-                                    <div class="delete_icon" @click="handleDelete(item.cartId)">N</div>
+                                    <div class="delete_icon" @click="handleDelete(item.id)">N</div>
                                 </div>
                             </div>
                         </div>
@@ -72,7 +72,12 @@
                             </div>
                             <div class="font-lg">合计（不含运费）：</div>
                             <div class="total_price">
-                                <price :price="[totalPrice]" :has-fix="true" :cur-font="24" :num-font="34"></price>
+                                <price
+                                    :price="[totalPrice]"
+                                    :has-fix="true"
+                                    :cur-font="24"
+                                    :num-font="34"
+                                ></price>
                             </div>
                         </div>
                         <div>
@@ -90,25 +95,28 @@ import Checkbox from '@/components/Checkbox/Checkbox.vue';
 import Counter from '@/components/Counter/Counter.vue';
 import Price from '@/components/Price/Price.vue'
 import router from '@/router';
-import request from '@/serve/request';
+import { base } from '@/serve/base-http.service';
 import { ref, reactive, onMounted, computed } from 'vue';
 
-interface good {
-    coverUrl: string
-    goodsId: string
+interface Sku {
+    attributes: string[]
     id: number
-    isSoldOut: number
-    marketPrice: number
+    img_url: string
+    market_price: number
     name: string
     price: number
-    saleTime: string
-    tag: number
-    quantity: number
-    checked: boolean
-    cartId: number
+    sold: number
+    stock: number
 }
 
-const data = reactive<good[]>([])
+interface Cart {
+    id: number
+    quantity: number
+    checked: boolean
+    sku: Sku
+}
+
+const data = reactive<Cart[]>([])
 
 const checkAll = ref(false)
 const btnDisabled = ref(true)
@@ -121,7 +129,7 @@ const total = computed<number>(() => {
 })
 const totalPrice = computed<number>(() => {
     return data.reduce((pre, cur) => {
-        if (cur.checked) return pre + cur.quantity * cur.marketPrice
+        if (cur.checked) return pre + cur.quantity * cur.sku.market_price
         else return pre
     }, 0)
 })
@@ -145,42 +153,55 @@ const handleCheckAll = () => {
 }
 
 const handleSettle = () => {
+    const ids: number[] = []
     const settleGoods = data.filter(item => item.checked)
-    console.log(settleGoods)
-    sessionStorage.setItem('order', JSON.stringify(settleGoods))
-    router.push({
-        name: 'OrderConfirm'
+    const paid = settleGoods.reduce((res, cur) => {
+        ids.push(cur.id)
+        return res + cur.quantity * cur.sku.market_price
+    }, 0)
+    const orderDetaile = settleGoods.map(item => {
+        return {
+            goodId: item.sku.id,
+            cover_url: item.sku.img_url,
+            name: item.sku.name,
+            attr: item.sku.name,
+            quantity: item.quantity,
+            market_price: item.sku.market_price,
+            paid: item.quantity * item.sku.market_price,
+        }
+    })
+    base.post('orders', {
+        paid: paid,
+        orderDetails: orderDetaile
+    }).then(res => {
+        console.log('create order', res)
+        console.log(ids)
+        base.post('carts/delete/ids', { ids })
+        router.push({
+            name: 'OrderConfirm',
+            params: {
+                orderId: res?.data.id
+            }
+        })
     })
 }
 
 const handleDelete = (id: number) => {
-    request.delete(`/cart/${id}`).then(res => {
+    base.delete(`carts/${id}`).then(res => {
         console.log('删除', res)
-        data.length = 0
         load()
     })
 }
 
 const load = () => {
-    const id = JSON.parse(sessionStorage.getItem('user') as string).id
-    request.get('/cart', { params: { userId: id } }).then((res) => {
+    base.get('carts').then((res) => {
         console.log('cart----', res)
-        const quantities = new Map()
-        res.data.forEach((item: { quantity: number, goodsId: number, id: number }) => {
-            quantities.set(item.goodsId, {quantity: item.quantity, cartId: item.id})
-        })
-        const ids = res.data.map((item: { goodsId: number }) => item.goodsId)
-        request.post('/goods/selectBatch', ids).then((res) => {
-            console.log('商品===', res)
-            const goods = res.data
-            goods.forEach((item: { id: number, quantity?: number, checked?: boolean, cartId?: number }) => {
-                item.quantity = quantities.get(item.id).quantity
-                item.cartId = quantities.get(item.id).cartId
-                item.checked = false
-            })
-            data.push(...goods)
-            console.log(goods)
-        })
+        data.length = 0
+        data.push(...res?.data.map((item: { checked: boolean }) => {
+            item.checked = false
+            return item
+        }))
+        console.log('data----', data)
     })
 }
 
@@ -488,6 +509,6 @@ button.settle {
 }
 .total_price {
     font-weight: 500;
-    color: #ff6d6d
+    color: #ff6d6d;
 }
 </style>
