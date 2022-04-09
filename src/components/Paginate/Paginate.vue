@@ -37,7 +37,6 @@ const handleClick = (next: number) => {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 24px;
 }
 .paginate > * + * {
     margin-left: 16px;

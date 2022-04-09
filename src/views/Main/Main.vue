@@ -1,22 +1,28 @@
 <template>
     <main class="container">
-        <CategoryNavbar @category-change="handleCategoryChange"></CategoryNavbar>
+        <CategoryNavbar></CategoryNavbar>
         <GoodsContent></GoodsContent>
     </main>
 </template>
 
 <script setup lang="ts">
 import CategoryNavbar from '../../components/CategoryNavbar/CategoryNavbar.vue'
-import GoodsContent from '../../components/GoodsContent/GoodsContent.vue'
-import { ref, provide } from 'vue'
+import GoodsContent from './GoodsContent/GoodsContent.vue'
+// import { reactive, provide } from 'vue'
+// interface Category {
+//     id: number
+//     parentId: number
+//     name: string
+//     children?: Array<Category>
+// }
+// type Categories = Category[]
+// const categories = reactive<Categories>([])
+// provide('categories', categories)
 
-const currentCategory = ref<string>('全部商品')
-
-provide('currentCategory', currentCategory)
-
-const handleCategoryChange = (category: string) => {
-    currentCategory.value = category
-}
+// const handleCategoryChange = (data: Categories) => {
+//     categories.length = 0
+//     categories.push(...data)
+// }
 </script>
 
 <style scoped>
@@ -24,6 +30,5 @@ const handleCategoryChange = (category: string) => {
     width: 100%;
     padding: 0;
     margin-bottom: 24px;
-    /* overflow: hidden; */
 }
 </style>

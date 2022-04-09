@@ -1,7 +1,7 @@
 <template>
     <div class="goods_content">
-        <breadcrumb></breadcrumb>
-        <order-panel></order-panel>
+        <breadcrumb default-text="全部商品"></breadcrumb>
+        <sort-panel></sort-panel>
         <div class="goods_list">
             <div class="container">
                 <template v-for="item in goods" :key="item.id">
@@ -23,26 +23,28 @@
                     </div>
                 </template>
             </div>
-            <paginate
-                :total="total"
-                :page-size="pageSize"
-                :pages="pages"
-                :current-page="currentPage"
-                @page-change="handlePageChange"
-            ></paginate>
+            <div class="mt-24">
+                <paginate
+                    :total="total"
+                    :page-size="pageSize"
+                    :pages="pages"
+                    :current-page="currentPage"
+                    @page-change="handlePageChange"
+                ></paginate>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import router from '@/router';
-import Breadcrumb from '../Breadcrumb/Breadcrumb.vue'
-import OrderPanel from '../OrderPanel/OrderPanel.vue'
-import Price from '../Price/Price.vue'
-import Paginate from '../Paginate/Paginate.vue'
-import { ref, Ref, reactive, inject, watchEffect, onMounted } from 'vue';
-import { onBeforeRouteUpdate } from 'vue-router'
-import { base } from '@/serve/base-http.service';
+import router from '../../../router';
+import Breadcrumb from '../../../components/Breadcrumb/Breadcrumb.vue'
+import SortPanel from '../../../components/SortPanel/SortPanel.vue'
+import Price from '../../../components/Price/Price.vue'
+import Paginate from '../../../components/Paginate/Paginate.vue'
+import { ref, Ref, reactive, inject, watchEffect, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router'
+import { base } from '../../../serve/base-http.service';
 
 interface good {
     cover_url: string
@@ -69,21 +71,38 @@ const currentCategory = inject<Ref<string>>('currentCategory', ref<string>('全�
 watchEffect(() => {
     console.log(currentCategory.value)
 })
-
+interface Option {
+    search?: string;
+    current_page: number;
+    page_size: number;
+    category?: string;
+    sort?: Sort;
+}
+const route = useRoute()
 const load = () => {
-    base.post('goods', {
-        page_size: pageSize.value,
-        current_page: currentPage.value,
-    }).then((res) => {
-        console.log(res);
+    const option = {} as Option
+    option.current_page = currentPage.value
+    option.page_size = pageSize.value
+    option.sort = Sort.TIME
+    if (route.query.search) option.search = route.query.search as string
+    if (route.query.sort) option.sort = route.query.sort as Sort
+    if (route.query.categoryId) option.category = route.query.categoryId as string
+    base.post('goods', option).then((res) => {
+        console.log(option.sort, res);
         total.value = res?.data.total
-        pages.value = Math.round(res?.data.total / pageSize.value)
+        pages.value = Math.ceil(res?.data.total / pageSize.value)
         goods.length = 0
         goods.push(...res?.data.goods.map((item: { cover_url: string }) => {
-    item.cover_url = `http://localhost:5091${item.cover_url}`
-    return item
-}))
+            item.cover_url = `http://localhost:5091${item.cover_url}`
+            return item
+        }))
     })
+}
+enum Sort {
+    TIME = 'time',
+    SOLED = 'soled',
+    PRICE = 'price',
+    PRICE_DES = '-price',
 }
 
 const handlePageChange = (next: number) => {
@@ -105,8 +124,8 @@ onMounted(() => {
     load()
 })
 
-onBeforeRouteUpdate((to) => {
-    console.log('route update ', to.params.search)
+watch(() => route.query, () => {
+    load()
 })
 </script>
 
@@ -134,8 +153,7 @@ onBeforeRouteUpdate((to) => {
     color: #16162e;
     width: 282px;
     border: 1px solid #f3f3f4;
-    transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1),
-        -webkit-box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     cursor: pointer;
 }
@@ -186,5 +204,8 @@ img {
     line-height: 32px;
     color: #ff6d6d;
     font-weight: 700;
+}
+.mt-24 {
+    margin-top: 24px;
 }
 </style>

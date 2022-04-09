@@ -1,6 +1,6 @@
 <template>
     <div class="user">
-        <breadcrumb></breadcrumb>
+        <breadcrumb default-text="个人中心"></breadcrumb>
         <div class="user_info">
             <div class="info_container">
                 <img src="/Header/avatar40017.webp" class="avator" />
@@ -18,14 +18,15 @@
                 </div>
                 <div class="side_body">
                     <div class="user_nav">
-                        <div class="nav_item active">
-                            <div class="nav_icon">G</div>我的订单
-                        </div>
-                        <div class="nav_item">
-                            <div class="nav_icon">G</div>退款售后
-                        </div>
-                        <div class="nav_item">
-                            <div class="nav_icon">G</div>优惠券
+                        <div
+                            class="nav_item"
+                            :class="{active: item.path === currentPath}"
+                            v-for="item in navItems"
+                            :key="item.path"
+                            @click="handleChangeSubView(item.path)"
+                        >
+                            <div class="nav_icon">G</div>
+                            {{item.name}}
                         </div>
                         <div class="nav_item">
                             <div class="nav_icon">G</div>地址管理
@@ -34,67 +35,7 @@
                 </div>
             </div>
             <div class="user_main">
-                <div class="loading">
-                    <div class="main_item">
-                        <div class="main_head">我的订单</div>
-                        <div class="main_tab">
-                            <div class="tab_item active">全部订单</div>
-                            <div class="tab_item">待付款</div>
-                            <div class="tab_item">待发货</div>
-                            <div class="tab_item">待收货</div>
-                        </div>
-                    </div>
-                    <div class="cart_body" v-if="data.length > 0">
-                        <div class="order_card" v-for="order in data" :key="order.id">
-                            <div class="main_title">
-                                <div class="title_icon">M</div>
-                                <div class="text">原神万有铺子</div>
-                            </div>
-                            <div class="order_body">
-                                <div class="good_list">
-                                    <div
-                                        class="good_card"
-                                        v-for="item in order.orderDetails"
-                                        :key="item.id"
-                                    >
-                                        <div class="cart_goods">
-                                            <div class="good_img">
-                                                <img
-                                                    :src="`http://localhost:5091${item.cover_url}`"
-                                                />
-                                            </div>
-                                            <div class="good_info">
-                                                <div class="good_name">{{ item.name }}</div>
-                                                <div class="good_attr">{{ item.attr }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="cart_price">
-                                            <price
-                                                :price="[item.market_price]"
-                                                :has-fix="true"
-                                                :cur-font="16"
-                                                :num-font="16"
-                                            ></price>
-                                        </div>
-                                        <div class="cart_count font-lg">x{{ item.quantity }}</div>
-                                    </div>
-                                </div>
-                                <div class="order_item_col order_fee">
-                                    <price
-                                        :price="[order.paid]"
-                                        :has-fix="true"
-                                        :cur-font="16"
-                                        :num-font="16"
-                                    ></price>
-                                </div>
-                                <div class="order_item_col order_info">
-                                    <button type="button" class="order_info_btn button-m">付款</button>
-                                    <span @click="handleToOrderDetail(order.id)">订单详情</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <router-view></router-view>
             </div>
         </div>
     </div>
@@ -102,44 +43,20 @@
 
 <script setup lang="ts">
 import Breadcrumb from '@/components/Breadcrumb/Breadcrumb.vue'
-import Price from '@/components/Price/Price.vue'
-import router from '@/router';
 import { base } from '@/serve/base-http.service';
-import { onMounted, reactive } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 
-enum OrderStatus {
-    TO_PAID = 'TO_PAID',
-    TO_SEND = 'TO_SEND',
-    TO_DEAL = 'TO_DEAL',
-    TO_SERVICE = 'TO_SERVICE',
-    HAS_CLOSED = 'HAS_CLOSED',
+interface NavItem {
+    name: string
+    path: string
 }
 
-interface OrderDetail {
-    id: string;
-    goodId: number;
-    cover_url: string;
-    name: string;
-    attr: string;
-    quantity: number;
-    market_price: number;
-    paid: number;
-    status: OrderStatus;
-    deal_time?: string;
-}
+const navItems = reactive<NavItem[]>([{ name: '我的订单', path: '/order' }, { name: '退款售后', path: '/service' }, { name: '优惠券', path: '/coupon' }])
+const currentPath = ref('/order')
 
-interface Order {
-    id: string;
-    receive_info?: string;
-    paid: number;
-    status: OrderStatus;
-    create_time: string;
-    paid_time?: string;
-    send_time?: string;
-    deal_time?: string;
-    orderDetails: OrderDetail[];
+const handleChangeSubView = (path: string) => {
+    console.log(path)
 }
-const data = reactive<Order[]>([])
 
 interface user {
     username: string
@@ -158,25 +75,7 @@ const getUserInfo = () => {
     })
 }
 
-const handleToOrderDetail = (orderId: string) => {
-    router.push({
-        name: 'Order',
-        params: {
-            orderId
-        }
-    })
-}
-
-const load = () => {
-    base.get(`orders`).then((res) => {
-        console.log('orders', res)
-        data.length = 0
-        data.push(...res?.data)
-    })
-}
-
 onMounted(() => {
-    load()
     getUserInfo()
 })
 </script>
@@ -275,6 +174,9 @@ onMounted(() => {
     color: #16162e;
     cursor: pointer;
 }
+.nav_item:hover {
+    color: #ff6d6d;
+}
 .nav_item.active {
     color: #ff6d6d;
 }
@@ -293,193 +195,5 @@ onMounted(() => {
 .user_main {
     flex-grow: 1;
     min-width: 0;
-}
-.main_head {
-    background: #fff;
-    padding: 24px 30px;
-    font-size: 18px;
-    font-weight: 700;
-    color: #1e1f20;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    border-radius: 6px 6px 0 0;
-}
-.main_tab {
-    padding: 12px 30px;
-    padding-top: 24px;
-    line-height: 20px;
-    font-size: 14px;
-    color: #16162e;
-    border-bottom: 1px solid #f3f3f4;
-    background: #fff;
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
-}
-.tab_item.active {
-    color: #ff6d6d;
-}
-.tab_item {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-}
-.tab_item:not(:first-child) {
-    margin-left: 40px;
-}
-.font-lg {
-    font-size: 16px;
-    line-height: 22px;
-}
-.good_card > div {
-    display: flex;
-    align-items: center;
-}
-.cart_goods {
-    flex: 1 1 0%;
-}
-.cart_price {
-    width: 146px;
-    justify-content: center;
-}
-.cart_count {
-    width: 72px;
-    justify-content: center;
-}
-.good_card {
-    position: relative;
-    padding: 14px 0;
-    display: flex;
-}
-.good_img {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    background-color: #f3f3f4;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #c5c5cb;
-    margin-right: 24px;
-}
-.good_img img {
-    height: 100%;
-    width: 100%;
-}
-.good_info {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding-top: 8px;
-    height: 100%;
-}
-.good_name {
-    width: 350px;
-    line-height: 22px;
-    font-size: 16px;
-}
-.main_title {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    padding-top: 24px;
-    line-height: 24px;
-}
-.order_card > div {
-    background: #fff;
-    padding-left: 30px;
-    padding-right: 30px;
-}
-.title_icon {
-    width: 24px;
-    height: 24px;
-    line-height: 24px;
-    font-size: 24px;
-    text-align: center;
-    color: #ff6d6d;
-    margin-right: 8px;
-}
-.text {
-    line-height: 24px;
-    font-size: 18px;
-    font-weight: 700;
-    color: #1e1f20;
-}
-.good_card + .good_card::after {
-    content: "";
-    position: absolute;
-    left: 194px;
-    right: 53px;
-    top: 0;
-    border-top: 1px solid #e7e7ea;
-}
-.red {
-    color: #ff6d6d;
-}
-.order_card {
-    min-height: 196px;
-    font-size: 14px;
-    line-height: 20px;
-}
-.order_card + .order_card {
-    margin-top: 8px;
-}
-.order_body {
-    border-bottom-left-radius: 6px;
-    border-bottom-right-radius: 6px;
-    padding-top: 24px;
-    padding-bottom: 24px;
-    display: flex;
-    align-items: flex-start;
-}
-.good_list {
-    flex: 1;
-}
-.order_item_col {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    flex-shrink: 0;
-    text-align: center;
-    min-height: 100px;
-}
-.order_fee {
-    width: 146px;
-    font-size: 16px;
-    color: #9696a1;
-    font-weight: 700;
-}
-.order_info {
-    width: 132px;
-    line-height: 24px;
-}
-.order_info > span {
-    cursor: pointer;
-    color: #519bde;
-}
-.good_card:first-child {
-    padding-top: 0;
-}
-.good_card:last-child {
-    padding-bottom: 0;
-}
-.order_info_btn {
-    color: #ff6d6d;
-    margin-bottom: 8px;
-    background-color: #fff;
-    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
-    border: solid #ff6d6d;
-    cursor: pointer;
-}
-.button-m {
-    min-width: 102px;
-    height: 40px;
-    font-size: 16px;
-    line-height: 22px;
-    border-radius: 6px;
-    border-width: 2px;
-    padding: 0 10px;
-    font-weight: 700;
 }
 </style>

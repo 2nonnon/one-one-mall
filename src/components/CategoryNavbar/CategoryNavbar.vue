@@ -3,50 +3,57 @@
         <div class="wrapper">
             <div :class="{ nav_icon: true, disable: toRight }" @click="handleToRight">&lt;</div>
             <div class="slider" :class="{ beauty: isBeauty }">
-                <div :class="item1Class" class="slider_item">
-                    <div class="category_item">
-                        <div
-                            class="levelone"
-                            @click="handleToCategory(defaultItem)"
-                        >{{ defaultItem }}</div>
-                    </div>
-                    <div class="category_item" v-for="item in categores1" :key="item.id">
-                        <div class="levelone" @click="handleToCategory(item.name)">
-                            {{ item.name }}
-                            <span
-                                class="trangle"
-                                v-if="item.children?.length !== 0"
-                            >A</span>
+                <transition name="first">
+                    <div class="slider_item" v-if="isFirst">
+                        <div class="category_item">
+                            <div class="levelone" @click="handleToAllGoods">{{ defaultItem }}</div>
                         </div>
-                        <div class="container" v-if="item.children?.length !== 0">
+                        <div class="category_item" v-for="item in categores1" :key="item.id">
                             <div
-                                class="leveltwo"
-                                v-for="cate in item.children"
-                                :key="cate.id"
-                                @click="handleToCategory(cate.name)"
-                            >{{ cate.name }}</div>
+                                class="levelone"
+                                @click="handleToCategory([{ id: item.id, parentId: item.parentId, name: item.name }])"
+                            >
+                                {{ item.name }}
+                                <span
+                                    class="trangle"
+                                    v-if="item.children?.length !== 0"
+                                >A</span>
+                            </div>
+                            <div class="container" v-if="item.children?.length !== 0">
+                                <div
+                                    class="leveltwo"
+                                    v-for="cate in item.children"
+                                    :key="cate.id"
+                                    @click="handleToCategory([{ id: item.id, parentId: item.parentId, name: item.name }, cate])"
+                                >{{ cate.name }}</div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div :class="item2Class" class="slider_item">
-                    <div class="category_item" v-for="item in categores2" :key="item.id">
-                        <div class="levelone" @click="handleToCategory(item.name)">
-                            {{ item.name }}
-                            <span
-                                class="trangle"
-                                v-if="item.children?.length !== 0"
-                            >A</span>
-                        </div>
-                        <div class="container" v-if="item.children?.length !== 0">
+                </transition>
+                <transition name="second">
+                    <div class="slider_item" v-if="!isFirst">
+                        <div class="category_item" v-for="item in categores2" :key="item.id">
                             <div
-                                class="leveltwo"
-                                v-for="cate in item.children"
-                                :key="cate.id"
-                                @click="handleToCategory(cate.name)"
-                            >{{ cate.name }}</div>
+                                class="levelone"
+                                @click="handleToCategory([{ id: item.id, parentId: item.parentId, name: item.name }])"
+                            >
+                                {{ item.name }}
+                                <span
+                                    class="trangle"
+                                    v-if="item.children?.length !== 0"
+                                >A</span>
+                            </div>
+                            <div class="container" v-if="item.children?.length !== 0">
+                                <div
+                                    class="leveltwo"
+                                    v-for="cate in item.children"
+                                    :key="cate.id"
+                                    @click="handleToCategory([item, cate])"
+                                >{{ cate.name }}</div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </transition>
             </div>
             <div :class="{ nav_icon: true, disable: toLeft }" @click="handleToLeft">&gt;</div>
         </div>
@@ -54,22 +61,37 @@
 </template>
 
 <script setup lang="ts">
+import router from '@/router';
 import { base } from '@/serve/base-http.service';
-import { defineEmits, reactive, ref } from 'vue'
+import { reactive, ref } from 'vue'
+import { emitter } from '@/util/emitter';
 
 const defaultItem = ref('全部商品')
-interface category {
+interface Category {
     id: number
     parentId: number
     name: string
-    children?: Array<category>
+    children?: Array<Category>
 }
-const categores1 = reactive<Array<category>>([])
-const categores2 = reactive<Array<category>>([])
+const categores1 = reactive<Array<Category>>([])
+const categores2 = reactive<Array<Category>>([])
 
-const emit = defineEmits(['category-change'])
-const handleToCategory = (category: string) => {
-    emit('category-change', category)
+type Categories = Category[]
+const handleToCategory = (categories: Categories) => {
+    emitter.emit('category-change', categories)
+    router.push({
+        path: '/main',
+        query: {
+            categoryId: categories.pop()?.id
+        }
+    })
+}
+
+const handleToAllGoods = () => {
+    emitter.emit('category-change', [])
+    router.push({
+        name: 'Main'
+    })
 }
 
 const load = () => {
@@ -78,21 +100,13 @@ const load = () => {
         categores1.length = 0
         categores2.length = 0
         categores1.push(...res?.data)
-        categores2.push(categores1.pop() as category)
+        categores2.push(categores1.pop() as Category)
     })
-}
-
-interface ClassObj {
-    center?: boolean
-    hidden?: boolean
-    left?: boolean
-    right?: boolean
 }
 
 const toLeft = ref(false)
 const toRight = ref(true)
-const item1Class = reactive<ClassObj>({ center: true })
-const item2Class = reactive<ClassObj>({ right: true, hidden: true })
+const isFirst = ref(true)
 const isBeauty = ref(false)
 
 const getBeauty = (duration: number) => {
@@ -104,28 +118,14 @@ const getBeauty = (duration: number) => {
 
 const handleToLeft = () => {
     getBeauty(300)
-
-    item2Class.right = false
-    item2Class.hidden = false
-    item2Class.center = true
-
-    item1Class.center = false
-    item1Class.left = true
-    item1Class.hidden = true
+    isFirst.value = false
 
     toLeft.value = !toLeft.value
     toRight.value = !toRight.value
 }
 const handleToRight = () => {
     getBeauty(300)
-
-    item2Class.right = true
-    item2Class.center = false
-    item2Class.hidden = true
-
-    item1Class.center = true
-    item1Class.left = false
-    item1Class.hidden = false
+    isFirst.value = true
 
     toLeft.value = !toLeft.value
     toRight.value = !toRight.value
@@ -173,18 +173,22 @@ load()
     display: flex;
     transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-.hidden {
-    opacity: 0;
-    pointer-events: none;
+.first-enter-from,
+.first-leave-to {
+    left: -100%;
+    overflow: hidden;
 }
-.center {
-    transform: translateX(0%);
+.first-enter-to,
+.first-leave-from,
+.second-enter-to,
+.second-leave-from {
+    left: 0;
+    overflow: hidden;
 }
-.right {
-    transform: translateX(100%);
-}
-.left {
-    transform: translateX(-100%);
+.second-enter-from,
+.second-leave-to {
+    left: 100%;
+    overflow: hidden;
 }
 .category_item {
     position: relative;

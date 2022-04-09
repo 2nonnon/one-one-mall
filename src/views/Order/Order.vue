@@ -7,42 +7,44 @@
                 <div class="steps">
                     <div class="progress-item progress-item--prev">
                         <div class="progress-item__progress">
-                            <span class="progress-item__title">待付款</span>
+                            <span class="progress-item__title">提交订单</span>
                             <span class="icon"></span>
                         </div>
-                        <div class="progress-item__subtitle">2022-04-08 15:32:11</div>
+                        <div class="progress-item__subtitle">{{ data.create_time }}</div>
                     </div>
                     <div class="progress-item progress-item--current">
                         <div class="progress-item__progress">
-                            <span class="progress-item__title">待付款</span>
+                            <span class="progress-item__title">付款</span>
                             <span class="icon"></span>
                         </div>
-                        <div class="progress-item__subtitle">2022-04-08 15:32:11</div>
+                        <div class="progress-item__subtitle">{{ data.paid_time }}</div>
                     </div>
                     <div class="progress-item progress-item--next">
                         <div class="progress-item__progress">
-                            <span class="progress-item__title">待付款</span>
+                            <span class="progress-item__title">发货</span>
                             <span class="icon"></span>
                         </div>
-                        <div class="progress-item__subtitle">2022-04-08 15:32:11</div>
+                        <div class="progress-item__subtitle">{{ data.send_time }}</div>
                     </div>
                     <div class="progress-item progress-item--next">
                         <div class="progress-item__progress">
-                            <span class="progress-item__title">待付款</span>
+                            <span class="progress-item__title">确认收货</span>
                             <span class="icon"></span>
                         </div>
-                        <div class="progress-item__subtitle">2022-04-08 15:32:11</div>
+                        <div class="progress-item__subtitle">{{ data.deal_time }}</div>
                     </div>
                 </div>
             </div>
             <div class="order-detail__card order-detail__opt">
-                <span class="order-detail__opt-no">订单号: 123123131313123123</span>
-                <span class="order-detail__opt-tip">待支付：</span>
-                <span class="order-detail__price">
-                    <price :price="[data.paid]" :has-fix="true" :cur-font="18" :num-font="24"></price>
-                </span>
-                <button type="button" class="button--primary button-m buy">付款</button>
-                <button type="button" class="button--default button-m">取消订单</button>
+                <span class="order-detail__opt-no">订单号: {{data.id}}</span>
+                <template v-if="data.status === OrderStatus.TO_PAID">
+                    <span class="order-detail__opt-tip">待支付：</span>
+                    <span class="order-detail__price">
+                        <price :price="[data.paid]" :has-fix="true" :cur-font="18" :num-font="24"></price>
+                    </span>
+                    <button type="button" class="button--primary button-m buy">付款</button>
+                    <button type="button" class="button--default button-m">取消订单</button>
+                </template>
             </div>
             <div class="order-detail__card order-detail__goods">
                 <div class="main_title">
@@ -99,7 +101,7 @@
                         <span class="order-detail__address-symbol-tip">收货信息：</span>
                     </div>
                     <div class="order-detail__address-info">
-                        <p class="order-detail__address">bababababbab</p>
+                        <p class="order-detail__address">{{ data.receive_info }}</p>
                         <button
                             type="button"
                             class="order-detail__change-btn button button--primary button--s button--plain"

@@ -21,6 +21,17 @@ const routes: Array<RouteRecordRaw> = [
         name: 'User',
         component: () =>
           import(/* webpackChunkName: "about" */ '../views/User/User.vue'),
+        redirect: {
+          name: 'UserOrder'
+        },
+        children: [
+          {
+            path: 'order',
+            name: 'UserOrder',
+            component: () =>
+              import(/* webpackChunkName: "about" */ '../views/User/UserOrder/UserOrder.vue'),
+          },
+        ]
       },
       {
         path: '/cart',
