@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "build": "cross-env BASE_URL=one-one.nnln.love vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
     "axios": "^0.26.1",
     "core-js": "^3.6.5",
+    "cross-env": "^7.0.3",
     "mitt": "^3.0.0",
     "regenerator-runtime": "^0.13.9",
     "vue": "^3.0.0",
