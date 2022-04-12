@@ -7,7 +7,7 @@
                 <template v-for="item in goods" :key="item.id">
                     <div class="good_card" @click="handleToDetail(item.id)">
                         <div class="good_img">
-                            <img :src="item.cover_url" />
+                            <img :data-src="item.cover_url" v-lazyload="'/Status/default.svg'" />
                         </div>
                         <div class="good_info">
                             <div class="good_title">
@@ -92,10 +92,7 @@ const load = () => {
         total.value = res?.data.total
         pages.value = Math.ceil(res?.data.total / pageSize.value)
         goods.length = 0
-        goods.push(...res?.data.goods.map((item: { cover_url: string }) => {
-            item.cover_url = `http://localhost:5091${item.cover_url}`
-            return item
-        }))
+        goods.push(...res?.data.goods)
     })
 }
 enum Sort {

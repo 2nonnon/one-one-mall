@@ -42,7 +42,7 @@
                     <div class="good_card" v-for="item in data.orderDetails" :key="item.id">
                         <div class="cart_goods">
                             <div class="good_img">
-                                <img :src="`http://localhost:5091${item.cover_url}`" />
+                                <img :src="item.cover_url" />
                             </div>
                             <div class="good_info">
                                 <div class="good_name">{{ item.name }}</div>

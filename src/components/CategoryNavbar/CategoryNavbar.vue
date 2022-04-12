@@ -1,5 +1,5 @@
 <template>
-    <div class="category_navbar">
+    <div class="category_navbar"  v-scroll="'drawed'">
         <div class="wrapper">
             <div :class="{ nav_icon: true, disable: toRight }" @click="handleToRight">&lt;</div>
             <div class="slider" :class="{ beauty: isBeauty }">
@@ -9,23 +9,15 @@
                             <div class="levelone" @click="handleToAllGoods">{{ defaultItem }}</div>
                         </div>
                         <div class="category_item" v-for="item in categores1" :key="item.id">
-                            <div
-                                class="levelone"
-                                @click="handleToCategory([{ id: item.id, parentId: item.parentId, name: item.name }])"
-                            >
+                            <div class="levelone"
+                                @click="handleToCategory([{ id: item.id, parentId: item.parentId, name: item.name }])">
                                 {{ item.name }}
-                                <span
-                                    class="trangle"
-                                    v-if="item.children?.length !== 0"
-                                >A</span>
+                                <span class="trangle" v-if="item.children?.length !== 0">A</span>
                             </div>
                             <div class="container" v-if="item.children?.length !== 0">
-                                <div
-                                    class="leveltwo"
-                                    v-for="cate in item.children"
-                                    :key="cate.id"
-                                    @click="handleToCategory([{ id: item.id, parentId: item.parentId, name: item.name }, cate])"
-                                >{{ cate.name }}</div>
+                                <div class="leveltwo" v-for="cate in item.children" :key="cate.id"
+                                    @click="handleToCategory([{ id: item.id, parentId: item.parentId, name: item.name }, cate])">
+                                    {{ cate.name }}</div>
                             </div>
                         </div>
                     </div>
@@ -33,23 +25,14 @@
                 <transition name="second">
                     <div class="slider_item" v-if="!isFirst">
                         <div class="category_item" v-for="item in categores2" :key="item.id">
-                            <div
-                                class="levelone"
-                                @click="handleToCategory([{ id: item.id, parentId: item.parentId, name: item.name }])"
-                            >
+                            <div class="levelone"
+                                @click="handleToCategory([{ id: item.id, parentId: item.parentId, name: item.name }])">
                                 {{ item.name }}
-                                <span
-                                    class="trangle"
-                                    v-if="item.children?.length !== 0"
-                                >A</span>
+                                <span class="trangle" v-if="item.children?.length !== 0">A</span>
                             </div>
                             <div class="container" v-if="item.children?.length !== 0">
-                                <div
-                                    class="leveltwo"
-                                    v-for="cate in item.children"
-                                    :key="cate.id"
-                                    @click="handleToCategory([item, cate])"
-                                >{{ cate.name }}</div>
+                                <div class="leveltwo" v-for="cate in item.children" :key="cate.id"
+                                    @click="handleToCategory([item, cate])">{{ cate.name }}</div>
                             </div>
                         </div>
                     </div>
@@ -63,7 +46,7 @@
 <script setup lang="ts">
 import router from '@/router';
 import { base } from '@/serve/base-http.service';
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { emitter } from '@/util/emitter';
 
 const defaultItem = ref('全部商品')
@@ -94,18 +77,8 @@ const handleToAllGoods = () => {
     })
 }
 
-const load = () => {
-    base.get('categories').then(res => {
-        console.log(res);
-        categores1.length = 0
-        categores2.length = 0
-        categores1.push(...res?.data)
-        categores2.push(categores1.pop() as Category)
-    })
-}
-
 const toLeft = ref(false)
-const toRight = ref(true)
+const toRight = ref(false)
 const isFirst = ref(true)
 const isBeauty = ref(false)
 
@@ -131,7 +104,20 @@ const handleToRight = () => {
     toRight.value = !toRight.value
 }
 
-load()
+const load = () => {
+    base.get('categories').then(res => {
+        console.log('categories', res);
+        categores1.length = 0
+        categores2.length = 0
+        categores1.push(...res?.data)
+        categores2.push(...(categores1.splice(7, 8) as Category[]))
+        if (categores2.length > 0) toRight.value = true
+    })
+}
+
+onMounted(() => {
+    load()
+})
 </script>
 
 <style scoped>
@@ -145,9 +131,11 @@ load()
     transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
     background-color: #fff;
 }
+
 .category_navbar.drawed {
     top: 44px;
 }
+
 .wrapper {
     margin: 0 auto;
     width: 1260px;
@@ -156,14 +144,17 @@ load()
     justify-content: space-between;
     align-items: center;
 }
+
 .slider {
     position: relative;
     height: 100%;
     flex-grow: 1;
 }
+
 .slider.beauty {
     overflow: hidden;
 }
+
 .slider_item {
     position: absolute;
     top: 0;
@@ -173,11 +164,13 @@ load()
     display: flex;
     transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .first-enter-from,
 .first-leave-to {
     left: -100%;
     overflow: hidden;
 }
+
 .first-enter-to,
 .first-leave-from,
 .second-enter-to,
@@ -185,14 +178,17 @@ load()
     left: 0;
     overflow: hidden;
 }
+
 .second-enter-from,
 .second-leave-to {
     left: 100%;
     overflow: hidden;
 }
+
 .category_item {
     position: relative;
 }
+
 .levelone {
     display: flex;
     justify-content: center;
@@ -208,6 +204,7 @@ load()
     transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
 }
+
 .container {
     position: absolute;
     opacity: 0;
@@ -225,14 +222,17 @@ load()
     pointer-events: none;
     background-color: #fff;
 }
+
 .category_item:hover .levelone {
     color: #ff6d6d;
     background-color: rgba(255, 109, 109, 0.1);
 }
+
 .category_item:hover .container {
     opacity: 1;
     pointer-events: initial;
 }
+
 .leveltwo {
     display: block;
     padding: 8px 9px;
@@ -245,10 +245,12 @@ load()
     cursor: pointer;
     word-break: break-all;
 }
+
 .leveltwo:hover {
     color: #ff6d6d;
     background-color: rgba(255, 109, 109, 0.1);
 }
+
 .nav_icon {
     flex-shrink: 0;
     cursor: pointer;
@@ -261,13 +263,16 @@ load()
     text-align: center;
     transition: all cubic-bezier(0.4, 0, 0.2, 1) 300ms;
 }
+
 .nav_icon:hover {
     background-color: #ff6d6d;
 }
+
 .nav_icon.disable {
     opacity: 0;
     pointer-events: none;
 }
+
 .trangle {
     transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
     margin-left: 4px;

@@ -1,9 +1,10 @@
 import { AxiosResponse } from 'axios'
 import axios from 'axios'
 
+console.log(process.env.NODE_ENV)
 const request = axios.create({
-  baseURL: process.env.BASE_URL || '/api',
-  timeout: 5000,
+  baseURL: process.env.NODE_ENV === 'product' ? 'https://api.nnln.love' : '/api',
+  timeout: 30000,
 })
 
 export default class BaseHttpService {

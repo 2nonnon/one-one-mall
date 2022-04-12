@@ -25,7 +25,7 @@
                             <checkbox v-model:checked="item.checked" @click="handleCheck"></checkbox>
                             <div class="cart_goods">
                                 <div class="good_img">
-                                    <img :src="`http://localhost:5091${item.sku.img_url}`" />
+                                    <img :src="item.sku.img_url" />
                                 </div>
                                 <div class="good_info">
                                     <div class="good_name">{{ item.sku.name }}</div>
@@ -96,6 +96,7 @@ import Counter from '@/components/Counter/Counter.vue';
 import Price from '@/components/Price/Price.vue'
 import router from '@/router';
 import { base } from '@/serve/base-http.service';
+import { emitter } from '@/util/emitter';
 import { ref, reactive, onMounted, computed } from 'vue';
 
 interface Sku {
@@ -176,7 +177,9 @@ const handleSettle = () => {
     }).then(res => {
         console.log('create order', res)
         console.log(ids)
-        base.post('carts/delete/ids', { ids })
+        base.post('carts/delete/ids', { ids }).then(() => {
+            emitter.emit('cart-change')
+        })
         router.push({
             name: 'OrderConfirm',
             params: {
@@ -189,6 +192,7 @@ const handleSettle = () => {
 const handleDelete = (id: number) => {
     base.delete(`carts/${id}`).then(res => {
         console.log('删除', res)
+        emitter.emit('cart-change')
         load()
     })
 }

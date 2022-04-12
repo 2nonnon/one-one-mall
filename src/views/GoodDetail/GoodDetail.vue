@@ -4,11 +4,11 @@
             <div class="detail_head">
                 <div class="img_swiper">
                     <div class="swiper_main">
-                        <img :src="`http://localhost:5091${data?.cover_url}`" />
+                        <img :data-src="data.cover_url" v-lazyload="'/Status/default.svg'" />
                         <!-- <img :src="currentImg.url" /> -->
                     </div>
                     <div class="swiper_item">
-                        <img class="img_active" :src="`http://localhost:5091${data?.cover_url}`" />
+                        <img class="img_active" :data-src="data.cover_url" v-lazyload="'/Status/default.svg'" />
                     </div>
                     <!-- <div class="swiper_item">
                         <img
@@ -29,7 +29,7 @@
                     </div>
                     <div class="detail_prices">
                         <price
-                            :price="[data?.market_price ?? 0]"
+                            :price="[data.market_price]"
                             :range="false"
                             :hasFix="false"
                             split="dash"
@@ -43,7 +43,7 @@
                             <div class="checkbox_group">
                                 <label class="checkbox_item checked">
                                     <input type="checkbox" />
-                                    {{ data?.name }}
+                                    {{ data.name }}
                                 </label>
                             </div>
                         </div>
@@ -87,7 +87,7 @@
             </div>
             <div class="seperator"></div>
             <div class="detail_body">
-                <img v-for="url, i in main" :key="i" :src="url" />
+                <img v-for="url, i in main" :key="i" :data-src="url" v-lazyload="'/Status/default.svg'" />
             </div>
         </div>
     </div>
@@ -362,6 +362,7 @@ const handleAddToCart = () => {
         quantity: quantity.value
     }).then(res => {
         console.log('add to cart', res)
+        emitter.emit('cart-change')
     })
 }
 

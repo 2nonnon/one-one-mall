@@ -9,6 +9,7 @@ type Events = {
     toLogin: boolean
     logined: void
     'category-change': Category[]
+    'cart-change': void
 };
 
 export const emitter = mitt<Events>()

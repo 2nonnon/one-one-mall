@@ -120,6 +120,8 @@ const getCartCount = () => {
     })
 }
 
+emitter.on('cart-change', getCartCount)
+
 onMounted(() => {
     checkLogin()
 })
