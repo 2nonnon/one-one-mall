@@ -3,7 +3,7 @@ import axios from 'axios'
 
 console.log(process.env.NODE_ENV)
 const request = axios.create({
-  baseURL: process.env.NODE_ENV === 'product' ? 'https://api.nnln.love' : '/api',
+  baseURL: process.env.NODE_ENV === 'production' ? 'https://api.nnln.love' : '/api',
   timeout: 30000,
 })
 
