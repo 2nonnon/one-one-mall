@@ -369,6 +369,7 @@ const handleAddToCart = () => {
 const load = (id: string) => {
     base.get(`goods/detail/${id}`).then((res) => {
         console.log(res)
+        document.title = res?.data.name
         Object.assign(data, res?.data)
     })
 }

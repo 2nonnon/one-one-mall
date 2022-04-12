@@ -1,5 +1,5 @@
 <template>
-    <div class="backtop">
+    <div class="backtop hidden" v-scroll="{className: 'hidden', handleScroll}">
         <div class="fixed-icon" @click="handleBackTop(250)">👆</div>
     </div>
 </template>
@@ -30,6 +30,18 @@ const handleBackTop = (duration: number) => {
     }
     toTop()
 }
+
+const handleScroll = (el: HTMLDivElement, className: string) => {
+    const classList = el.classList
+    return () => {
+        const cur = document.documentElement.scrollTop
+        if (cur > 400 && classList.contains(className)) {
+            classList.remove(className)
+        } else if (cur < 400 && !classList.contains(className)) {
+            classList.add(className)
+        }
+    }
+}
 </script>
 
 <style scoped>
@@ -41,7 +53,10 @@ const handleBackTop = (duration: number) => {
     right: 0px;
     opacity: 1;
 }
-
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
 .fixed-icon {
     width: 46px;
     height: 46px;

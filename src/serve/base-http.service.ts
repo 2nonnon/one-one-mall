@@ -1,5 +1,6 @@
 import { AxiosResponse } from 'axios'
 import axios from 'axios'
+import router from '@/router'
 
 console.log(process.env.NODE_ENV)
 const request = axios.create({
@@ -65,7 +66,10 @@ export default class BaseHttpService {
   }
 
   _handle401(): void {
-    window.location.hash = '/signin'
+    this.removeToken()
+    router.push({
+      path: '/'
+    })
   }
 
   _getCommonOptions(): {

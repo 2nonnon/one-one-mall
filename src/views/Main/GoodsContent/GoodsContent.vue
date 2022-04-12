@@ -24,13 +24,8 @@
                 </template>
             </div>
             <div class="mt-24">
-                <paginate
-                    :total="total"
-                    :page-size="pageSize"
-                    :pages="pages"
-                    :current-page="currentPage"
-                    @page-change="handlePageChange"
-                ></paginate>
+                <paginate :total="total" :page-size="pageSize" :pages="pages" :current-page="currentPage"
+                    @page-change="handlePageChange"></paginate>
             </div>
         </div>
     </div>
@@ -81,6 +76,7 @@ interface Option {
 const route = useRoute()
 const load = () => {
     const option = {} as Option
+    if (route.query.page) currentPage.value = parseInt(route.query.page as string, 10)
     option.current_page = currentPage.value
     option.page_size = pageSize.value
     option.sort = Sort.TIME
@@ -104,7 +100,12 @@ enum Sort {
 
 const handlePageChange = (next: number) => {
     currentPage.value = next
-    load()
+    const query = Object.assign({page: next}, route.query)
+    query.page = next
+    router.push({
+        path: '/main',
+        query: query
+    })
 }
 
 const handleToDetail = (id: number): void => {
@@ -131,11 +132,13 @@ watch(() => route.query, () => {
     width: 1260px;
     margin: 0 auto;
 }
+
 .goods_list {
     padding: 24px 30px;
     border-radius: 6px;
     background-color: #fff;
 }
+
 .container {
     padding-top: 6px;
     flex-wrap: wrap;
@@ -143,6 +146,7 @@ watch(() => route.query, () => {
     justify-content: flex-start;
     align-items: flex-start;
 }
+
 .good_card {
     flex-shrink: 0;
     margin: 24px 24px 0 0;
@@ -154,28 +158,35 @@ watch(() => route.query, () => {
     overflow: hidden;
     cursor: pointer;
 }
+
 .good_card:hover {
     box-shadow: 0 0 8px 2px #eff1f4;
 }
+
 .good_card:nth-child(-n + 4) {
     margin-top: 0;
 }
+
 .good_card:nth-child(4n) {
     margin-right: 0;
 }
+
 .good_img {
     width: 280px;
     height: 280px;
     position: relative;
 }
+
 img {
     width: 100%;
     height: 100%;
 }
+
 .good_info {
     border-top: 1px solid #f3f3f4;
     padding: 16px 20px 20px;
 }
+
 .good_title {
     color: #16162e;
     height: 44px;
@@ -190,18 +201,21 @@ img {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
 }
+
 .good_status {
     display: inline-block;
     width: 48px;
     height: 18px;
     vertical-align: -2px;
 }
+
 .price_wrapper {
     margin-top: 13px;
     line-height: 32px;
     color: #ff6d6d;
     font-weight: 700;
 }
+
 .mt-24 {
     margin-top: 24px;
 }

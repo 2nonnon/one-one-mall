@@ -50,8 +50,9 @@
 <script setup lang="ts">
 import router from '@/router';
 import { emitter } from '../../util/emitter'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watchEffect } from 'vue'
 import {base} from '@/serve/base-http.service';
+import { useRoute } from 'vue-router';
 
 const count = ref(0)
 const value = ref('')
@@ -61,8 +62,8 @@ const isLogined = ref(false)
 const handleSearch = () => {
     // console.log(value.value)
     router.push({
-        name: 'Main',
-        params: {
+        path: '/main',
+        query: {
             search: value.value
         }
     })
@@ -95,7 +96,7 @@ const handleValidate = (cb: callback) => {
 }
 
 const handleQuit = () => {
-    base.removeToken()
+    base._handle401()
     checkLogin()
 }
 
@@ -122,8 +123,15 @@ const getCartCount = () => {
 
 emitter.on('cart-change', getCartCount)
 
+const route = useRoute()
+
+watchEffect(() => {
+    value.value = route.query.search as string ?? ''
+})
+
 onMounted(() => {
     checkLogin()
+
 })
 </script>
 

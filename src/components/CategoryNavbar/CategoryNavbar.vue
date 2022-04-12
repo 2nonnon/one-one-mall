@@ -1,5 +1,5 @@
 <template>
-    <div class="category_navbar"  v-scroll="'drawed'">
+    <div class="category_navbar" v-scroll="{ className: 'drawed', handleScroll }">
         <div class="wrapper">
             <div :class="{ nav_icon: true, disable: toRight }" @click="handleToRight">&lt;</div>
             <div class="slider" :class="{ beauty: isBeauty }">
@@ -61,6 +61,7 @@ const categores2 = reactive<Array<Category>>([])
 
 type Categories = Category[]
 const handleToCategory = (categories: Categories) => {
+    // 数据传给面包屑
     emitter.emit('category-change', categories)
     router.push({
         path: '/main',
@@ -71,6 +72,7 @@ const handleToCategory = (categories: Categories) => {
 }
 
 const handleToAllGoods = () => {
+    // 数据传给面包屑
     emitter.emit('category-change', [])
     router.push({
         name: 'Main'
@@ -102,6 +104,20 @@ const handleToRight = () => {
 
     toLeft.value = !toLeft.value
     toRight.value = !toRight.value
+}
+
+const handleScroll = (el: HTMLDivElement, className: string) => {
+    const classList = el.classList
+    let top = 0
+    return () => {
+        const cur = document.documentElement.scrollTop
+        if (top > cur && classList.contains(className)) {
+            classList.remove(className)
+        } else if (top < cur && !classList.contains(className)) {
+            classList.add(className)
+        }
+        top = cur
+    }
 }
 
 const load = () => {
