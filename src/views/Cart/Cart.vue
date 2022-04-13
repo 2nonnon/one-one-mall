@@ -1,7 +1,8 @@
 <template>
     <div class="cart">
-        <div class="loading">
-            <div class="cart_head">
+        <loading :is-loading="isLoading">
+            <template v-slot>
+                            <div class="cart_head">
                 <div class="block"></div>
                 <div class="cart_goods">商品信息</div>
                 <div class="cart_price">单价</div>
@@ -86,12 +87,14 @@
                     </div>
                 </div>
             </div>
-        </div>
+            </template>
+        </loading>
     </div>
 </template>
 
 <script setup lang="ts">
 import Checkbox from '@/components/Checkbox/Checkbox.vue';
+import Loading from '@/components/Loading/Loading.vue';
 import Counter from '@/components/Counter/Counter.vue';
 import Price from '@/components/Price/Price.vue'
 import router from '@/router';
@@ -153,6 +156,8 @@ const handleCheckAll = () => {
     btnCheck()
 }
 
+const isLoading = ref(true)
+
 const handleSettle = () => {
     const ids: number[] = []
     const settleGoods = data.filter(item => item.checked)
@@ -199,6 +204,7 @@ const handleDelete = (id: number) => {
 
 const load = () => {
     base.get('carts').then((res) => {
+        isLoading.value = false
         console.log('cart----', res)
         data.length = 0
         data.push(...res?.data.map((item: { checked: boolean }) => {
@@ -223,10 +229,10 @@ onMounted(() => {
     padding-top: 24px;
     padding-bottom: 24px;
 }
-.loading {
+/* .loading {
     position: relative;
     flex-grow: 1;
-}
+} */
 .cart_head {
     border-radius: 6px;
     padding: 20px 30px;

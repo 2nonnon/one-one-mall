@@ -141,7 +141,7 @@ onMounted(() => {
     top: 0;
     z-index: 11;
     min-width: 1260px;
-    height: 5rem;
+    height: 100px;
     background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
     font-size: 14px;
 }

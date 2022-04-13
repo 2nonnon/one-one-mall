@@ -3,30 +3,34 @@
         <breadcrumb default-text="全部商品"></breadcrumb>
         <sort-panel></sort-panel>
         <div class="goods_list">
-            <div class="container">
-                <template v-for="item in goods" :key="item.id">
-                    <div class="good_card" @click="handleToDetail(item.id)">
-                        <div class="good_img">
-                            <img :data-src="item.cover_url" v-lazyload="'/Status/default.svg'" />
-                        </div>
-                        <div class="good_info">
-                            <div class="good_title">
-                                <div class="good_status" v-if="item.tag">
-                                    <img :src="status[item.tag]" />
+            <loading :is-loading="isLoading">
+                <template v-slot>
+                    <div class="container">
+                        <template v-for="item in goods" :key="item.id">
+                            <div class="good_card" @click="handleToDetail(item.id)">
+                                <div class="good_img">
+                                    <img :data-src="item.cover_url" v-lazyload="'/Status/default.svg'" />
                                 </div>
-                                {{ item.name }}
+                                <div class="good_info">
+                                    <div class="good_title">
+                                        <div class="good_status" v-if="item.tag">
+                                            <img :src="status[item.tag]" />
+                                        </div>
+                                        {{ item.name }}
+                                    </div>
+                                    <div class="price_wrapper">
+                                        <price :price="[item.price]"></price>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="price_wrapper">
-                                <price :price="[item.price]"></price>
-                            </div>
-                        </div>
+                        </template>
+                    </div>
+                    <div class="mt-24">
+                        <paginate :total="total" :page-size="pageSize" :pages="pages" :current-page="currentPage"
+                            @page-change="handlePageChange"></paginate>
                     </div>
                 </template>
-            </div>
-            <div class="mt-24">
-                <paginate :total="total" :page-size="pageSize" :pages="pages" :current-page="currentPage"
-                    @page-change="handlePageChange"></paginate>
-            </div>
+            </loading>
         </div>
     </div>
 </template>
@@ -37,9 +41,12 @@ import Breadcrumb from '../../../components/Breadcrumb/Breadcrumb.vue'
 import SortPanel from '../../../components/SortPanel/SortPanel.vue'
 import Price from '../../../components/Price/Price.vue'
 import Paginate from '../../../components/Paginate/Paginate.vue'
-import { ref, Ref, reactive, inject, watchEffect, onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router'
+import Loading from '../../../components/Loading/Loading.vue'
+import { ref, reactive, onMounted, watch } from 'vue';
+import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { base } from '../../../serve/base-http.service';
+
+const isLoading = ref(true)
 
 interface good {
     cover_url: string
@@ -61,11 +68,6 @@ const goods = reactive<good[]>([])
 
 const status: string[] = ['', '/Status/b62a22805ff37997c816cb91984d71be_1387051523058128219.png', '', '/Status/52a332d5a64c66bd3471f5ed39c35868_7340073586395887667.png']
 
-const currentCategory = inject<Ref<string>>('currentCategory', ref<string>('全部商品'))
-
-watchEffect(() => {
-    console.log(currentCategory.value)
-})
 interface Option {
     search?: string;
     current_page: number;
@@ -85,6 +87,7 @@ const load = () => {
     if (route.query.categoryId) option.category = route.query.categoryId as string
     base.post('goods', option).then((res) => {
         console.log(option.sort, res);
+        isLoading.value = false
         total.value = res?.data.total
         pages.value = Math.ceil(res?.data.total / pageSize.value)
         goods.length = 0
@@ -99,8 +102,7 @@ enum Sort {
 }
 
 const handlePageChange = (next: number) => {
-    currentPage.value = next
-    const query = Object.assign({page: next}, route.query)
+    const query = Object.assign({ page: next }, route.query)
     query.page = next
     router.push({
         path: '/main',
@@ -124,6 +126,11 @@ onMounted(() => {
 
 watch(() => route.query, () => {
     load()
+})
+
+onBeforeRouteUpdate(() => {
+    isLoading.value = true
+    currentPage.value = 1
 })
 </script>
 
