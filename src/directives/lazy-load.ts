@@ -27,6 +27,10 @@ export default {
         observer.observe(el)
       },
       updated(el: HTMLImageElement, binding: DirectiveBinding) {
+        // updated:在包含组件的 VNode 及其子组件的 VNode 更新之后调用
+        // 判断binding.value是否更改，过滤无关更新
+        if (binding.value === binding.oldValue) return;
+
         el.src = binding.value
         observer.observe(el)
       },

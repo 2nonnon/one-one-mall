@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <loading :is-loading="isLoading">
+        <loading :is-loading="isLoading" style="min-height: 800px;">
             <template v-slot>
                 <div class="good_detail" v-if="data">
                     <div class="detail_head">

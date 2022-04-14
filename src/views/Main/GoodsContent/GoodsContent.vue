@@ -3,7 +3,7 @@
         <breadcrumb default-text="全部商品"></breadcrumb>
         <sort-panel></sort-panel>
         <div class="goods_list">
-            <loading :is-loading="isLoading">
+            <loading :is-loading="isLoading" :class="{ 'loading-active': isLoading }">
                 <template v-slot>
                     <div class="container">
                         <template v-for="item in goods" :key="item.id">
@@ -25,10 +25,12 @@
                             </div>
                         </template>
                     </div>
-                    <div class="mt-24">
+                    <div class="mt-24" v-if="pages > 0">
                         <paginate :total="total" :page-size="pageSize" :pages="pages" :current-page="currentPage"
                             @page-change="handlePageChange"></paginate>
                     </div>
+                    <EmptyHorizontal src="/Status/f5f2cc4fe8253c706d0f69dd7ba23326_5226366700752376093.png"
+                        title="没有找到相关商品" v-else></EmptyHorizontal>
                 </template>
             </loading>
         </div>
@@ -42,6 +44,7 @@ import SortPanel from '../../../components/SortPanel/SortPanel.vue'
 import Price from '../../../components/Price/Price.vue'
 import Paginate from '../../../components/Paginate/Paginate.vue'
 import Loading from '../../../components/Loading/Loading.vue'
+import EmptyHorizontal from '../../../components/EmptyHorizontal/EmptyHorizontal.vue'
 import { ref, reactive, onMounted, watch } from 'vue';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router'
 import { base } from '../../../serve/base-http.service';
@@ -77,6 +80,7 @@ interface Option {
 }
 const route = useRoute()
 const load = () => {
+    isLoading.value = true
     const option = {} as Option
     if (route.query.page) currentPage.value = parseInt(route.query.page as string, 10)
     option.current_page = currentPage.value
@@ -87,11 +91,12 @@ const load = () => {
     if (route.query.categoryId) option.category = route.query.categoryId as string
     base.post('goods', option).then((res) => {
         console.log(option.sort, res);
-        isLoading.value = false
         total.value = res?.data.total
         pages.value = Math.ceil(res?.data.total / pageSize.value)
         goods.length = 0
         goods.push(...res?.data.goods)
+    }).finally(() => {
+        isLoading.value = false
     })
 }
 enum Sort {
@@ -129,12 +134,15 @@ watch(() => route.query, () => {
 })
 
 onBeforeRouteUpdate(() => {
-    isLoading.value = true
     currentPage.value = 1
 })
 </script>
 
 <style scoped>
+.loading-active {
+    min-height: 4380px;
+}
+
 .goods_content {
     width: 1260px;
     margin: 0 auto;

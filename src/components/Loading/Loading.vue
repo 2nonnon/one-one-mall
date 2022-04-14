@@ -1,9 +1,13 @@
 <template>
-    <div class="loading" :class="{ active: isLoading }">
+    <div class="loading">
         <slot v-if="!isLoading"></slot>
+
         <div class="loading__content" v-if="isLoading">
             <div class="loading__gap-top"></div>
-            <img src="/Status/loadingContent.b207a25.gif" alt="">
+            <transition appear-class="img--appear" appear-active-class="img--appear" appear-to-class="img--appear-to"
+                :appear="true">
+                <img class="loading__img" src="/Status/loadingContent.b207a25.gif" alt="加载中..." ref="img">
+            </transition>
             <p class="loading__title">加载中...</p>
             <div class="loading__gap-bottom"></div>
         </div>
@@ -22,11 +26,6 @@ defineProps<{ isLoading: boolean }>()
     min-height: 260px;
 }
 
-.active {
-    width: 100%;
-    height: 100%;
-}
-
 .loading__content {
     position: absolute;
     left: 0;
@@ -43,13 +42,14 @@ defineProps<{ isLoading: boolean }>()
     overflow: hidden;
 }
 
-.loading__content img {
+.loading__img {
     background-repeat: no-repeat;
     background-position: center center;
     background-size: cover;
     transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
     width: 160px;
     height: 160px;
+    transform: translate(200px);
 }
 
 .loading__gap-top {
@@ -63,5 +63,18 @@ defineProps<{ isLoading: boolean }>()
 
 .loading__gap-bottom {
     flex: 10 0 42px;
+}
+
+.img--appear {
+    transform: translate(-200px);
+}
+
+.img--appear-to,
+.img--leave-from {
+    transform: translate(0px);
+}
+
+.img--leave-to {
+    transform: translate(200px);
 }
 </style>

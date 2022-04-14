@@ -1,7 +1,14 @@
 <template>
     <div class="category_navbar" v-scroll="{ className: 'drawed', handleScroll }">
         <div class="wrapper">
-            <div :class="{ nav_icon: true, disable: toRight }" @click="handleToRight">&lt;</div>
+            <div :class="{ nav_icon: true, disable: toRight }" @click="handleToRight">
+                <svg t="1649936383580" class="left-icon x-icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="39858">
+                    <path
+                        d="M684.29 799.276L393.929 513.019 684.29 226.762c37.685-37.153 38.003-97.625 0.707-134.384-37.297-36.758-98.646-36.435-136.331 0.718l-357.43 352.378c-0.155 0.153-0.297 0.314-0.451 0.468-0.084 0.082-0.172 0.157-0.256 0.239-18.357 18.092-27.581 41.929-27.743 65.902-0.004 0.311-0.017 0.623-0.018 0.934 0.001 0.316 0.014 0.632 0.018 0.948 0.165 23.97 9.389 47.803 27.743 65.892 0.083 0.082 0.171 0.157 0.255 0.239 0.154 0.154 0.296 0.315 0.452 0.468l357.43 352.378c37.685 37.153 99.034 37.476 136.331 0.718 37.297-36.758 36.979-97.231-0.707-134.384z"
+                        p-id="39859"></path>
+                </svg>
+            </div>
             <div class="slider" :class="{ beauty: isBeauty }">
                 <transition name="first">
                     <div class="slider_item" v-if="isFirst">
@@ -12,7 +19,14 @@
                             <div class="levelone"
                                 @click="handleToCategory([{ id: item.id, parentId: item.parentId, name: item.name }])">
                                 {{ item.name }}
-                                <span class="trangle" v-if="item.children?.length !== 0">A</span>
+                                <span class="trangle" v-if="item.children?.length !== 0">
+                                    <svg t="1649934894859" class="trangle-icon x-icon" viewBox="0 0 1638 1024"
+                                        version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7644">
+                                        <path
+                                            d="M978.944 824.1152L1531.904 133.12A81.92 81.92 0 0 0 1468.0064 0H170.3936A81.92 81.92 0 0 0 106.496 133.12l552.96 690.9952a204.8 204.8 0 0 0 319.488 0z"
+                                            p-id="7645"></path>
+                                    </svg>
+                                </span>
                             </div>
                             <div class="container" v-if="item.children?.length !== 0">
                                 <div class="leveltwo" v-for="cate in item.children" :key="cate.id"
@@ -28,7 +42,14 @@
                             <div class="levelone"
                                 @click="handleToCategory([{ id: item.id, parentId: item.parentId, name: item.name }])">
                                 {{ item.name }}
-                                <span class="trangle" v-if="item.children?.length !== 0">A</span>
+                                <span class="trangle" v-if="item.children?.length !== 0">
+                                    <svg t="1649934894859" class="trangle-icon x-icon" viewBox="0 0 1638 1024"
+                                        version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7644">
+                                        <path
+                                            d="M978.944 824.1152L1531.904 133.12A81.92 81.92 0 0 0 1468.0064 0H170.3936A81.92 81.92 0 0 0 106.496 133.12l552.96 690.9952a204.8 204.8 0 0 0 319.488 0z"
+                                            p-id="7645"></path>
+                                    </svg>
+                                </span>
                             </div>
                             <div class="container" v-if="item.children?.length !== 0">
                                 <div class="leveltwo" v-for="cate in item.children" :key="cate.id"
@@ -38,7 +59,14 @@
                     </div>
                 </transition>
             </div>
-            <div :class="{ nav_icon: true, disable: toLeft }" @click="handleToLeft">&gt;</div>
+            <div :class="{ nav_icon: true, disable: toLeft }" @click="handleToLeft">
+                <svg t="1649936383580" class="right-icon x-icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="39858">
+                    <path
+                        d="M684.29 799.276L393.929 513.019 684.29 226.762c37.685-37.153 38.003-97.625 0.707-134.384-37.297-36.758-98.646-36.435-136.331 0.718l-357.43 352.378c-0.155 0.153-0.297 0.314-0.451 0.468-0.084 0.082-0.172 0.157-0.256 0.239-18.357 18.092-27.581 41.929-27.743 65.902-0.004 0.311-0.017 0.623-0.018 0.934 0.001 0.316 0.014 0.632 0.018 0.948 0.165 23.97 9.389 47.803 27.743 65.892 0.083 0.082 0.171 0.157 0.255 0.239 0.154 0.154 0.296 0.315 0.452 0.468l357.43 352.378c37.685 37.153 99.034 37.476 136.331 0.718 37.297-36.758 36.979-97.231-0.707-134.384z"
+                        p-id="39859"></path>
+                </svg>
+            </div>
         </div>
     </div>
 </template>
@@ -79,8 +107,8 @@ const handleToAllGoods = () => {
     })
 }
 
-const toLeft = ref(false)
-const toRight = ref(false)
+const toLeft = ref(true)
+const toRight = ref(true)
 const isFirst = ref(true)
 const isBeauty = ref(false)
 
@@ -127,7 +155,7 @@ const load = () => {
         categores2.length = 0
         categores1.push(...res?.data)
         categores2.push(...(categores1.splice(7, 8) as Category[]))
-        if (categores2.length > 0) toRight.value = true
+        if (categores2.length > 0) toLeft.value = false
     })
 }
 
@@ -290,13 +318,40 @@ onMounted(() => {
 }
 
 .trangle {
-    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
     margin-left: 4px;
-    color: #c5c5cb;
     height: 16px;
     width: 16px;
     display: inline-block;
     line-height: 16px;
     text-align: center;
+}
+
+.trangle-icon {
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    color: #c5c5cb;
+    font-size: 9px;
+}
+
+.category_item:hover .trangle-icon {
+    color: #ff6d6d;
+    transform-origin: center 40%;
+    transform: rotateZ(180deg);
+}
+
+.left-icon,
+.right-icon {
+    font-size: 11px;
+}
+
+.right-icon {
+    transform: rotateZ(180deg);
+}
+
+.x-icon {
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.15em;
+    fill: currentColor;
+    overflow: hidden;
 }
 </style>
