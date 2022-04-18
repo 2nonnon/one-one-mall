@@ -23,139 +23,139 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, defineEmits } from "vue";
-import { base } from "@/serve/base-http.service";
+import { reactive } from 'vue'
+import { base } from '@/serve/base-http.service'
 
-const emit = defineEmits(["register-success", "register-failed"]);
+const emit = defineEmits(['register-success', 'register-failed'])
 
 enum Tips {
-  LOGIN_SUCCESS = "登录成功",
-  LOGIN_FAILED = "账号或密码错误",
-  REGISTER_SUCCESS = "注册成功",
-  USERNAME_EMPTY = "*用户名不能为空",
-  PASSWORD_EMPTY = "*密码不能为空",
-  CONFIRM_EMPTY = "*确认密码不能为空",
-  USERNAME_ERROR = "*用户名长度应大于4小于20",
-  PASSWORD_ERROR = "*密码长度应大于6小于16",
-  CONFIRM_ERROR = "*两次输入的密码不相同",
+  LOGIN_SUCCESS = '登录成功',
+  LOGIN_FAILED = '账号或密码错误',
+  REGISTER_SUCCESS = '注册成功',
+  USERNAME_EMPTY = '*用户名不能为空',
+  PASSWORD_EMPTY = '*密码不能为空',
+  CONFIRM_EMPTY = '*确认密码不能为空',
+  USERNAME_ERROR = '*用户名长度应大于4小于20',
+  PASSWORD_ERROR = '*密码长度应大于6小于16',
+  CONFIRM_ERROR = '*两次输入的密码不相同'
 }
 
 interface IFormItem {
-  title: string;
-  content: string;
-  tipText: Tips;
-  type: string;
-  validate: () => boolean;
-  isValidate: boolean;
+  title: string
+  content: string
+  tipText: Tips
+  type: string
+  validate: () => boolean
+  isValidate: boolean
 }
 
 interface IRegisterForm {
-  username: IFormItem;
-  password: IFormItem;
-  confirmPassword: IFormItem;
+  username: IFormItem
+  password: IFormItem
+  confirmPassword: IFormItem
 }
 
 const registerForm = reactive<IRegisterForm>({
   username: {
-    title: "用户名",
-    content: "",
-    type: "text",
+    title: '用户名',
+    content: '',
+    type: 'text',
     tipText: Tips.USERNAME_EMPTY,
     validate: usernameValiFunc,
-    isValidate: true,
+    isValidate: true
   },
   password: {
-    title: "密码",
-    content: "",
-    type: "password",
+    title: '密码',
+    content: '',
+    type: 'password',
     tipText: Tips.PASSWORD_EMPTY,
     validate: passwordValiFunc,
-    isValidate: true,
+    isValidate: true
   },
   confirmPassword: {
-    title: "确认密码",
-    content: "",
-    type: "password",
+    title: '确认密码',
+    content: '',
+    type: 'password',
     tipText: Tips.CONFIRM_EMPTY,
     validate: confirmValiFunc,
-    isValidate: true,
-  },
-});
+    isValidate: true
+  }
+})
 
 function usernameValiFunc(this: IFormItem) {
-  let res = false;
-  if (this.content === "") {
-    this.tipText = Tips.USERNAME_EMPTY;
-    this.isValidate = false;
+  let res = false
+  if (this.content === '') {
+    this.tipText = Tips.USERNAME_EMPTY
+    this.isValidate = false
   } else {
     if (this.content.length <= 4 || this.content.length >= 20) {
-      this.tipText = Tips.USERNAME_ERROR;
-      this.isValidate = false;
+      this.tipText = Tips.USERNAME_ERROR
+      this.isValidate = false
     } else {
-      this.isValidate = true;
-      res = true;
+      this.isValidate = true
+      res = true
     }
   }
-  return res;
+  return res
 }
 function passwordValiFunc(this: IFormItem) {
-  let res = false;
-  if (this.content === "") {
-    this.tipText = Tips.PASSWORD_EMPTY;
-    this.isValidate = false;
+  let res = false
+  if (this.content === '') {
+    this.tipText = Tips.PASSWORD_EMPTY
+    this.isValidate = false
   } else {
     if (this.content.length <= 6 || this.content.length >= 16) {
-      this.tipText = Tips.PASSWORD_ERROR;
-      this.isValidate = false;
+      this.tipText = Tips.PASSWORD_ERROR
+      this.isValidate = false
     } else {
-      this.isValidate = true;
-      res = true;
+      this.isValidate = true
+      res = true
     }
   }
-  return res;
+  return res
 }
 function confirmValiFunc(this: IFormItem) {
-  let res = false;
-  if (this.content === "") {
-    this.tipText = Tips.CONFIRM_EMPTY;
-    this.isValidate = false;
+  let res = false
+  if (this.content === '') {
+    this.tipText = Tips.CONFIRM_EMPTY
+    this.isValidate = false
   } else {
     if (this.content !== registerForm.password.content) {
-      this.tipText = Tips.CONFIRM_ERROR;
-      this.isValidate = false;
+      this.tipText = Tips.CONFIRM_ERROR
+      this.isValidate = false
     } else {
-      this.isValidate = true;
-      res = true;
+      this.isValidate = true
+      res = true
     }
   }
 
-  return res;
+  return res
 }
 
 const handleBlur = (item: IFormItem) => {
-  item.validate();
-};
+  item.validate()
+}
 
 const validation = (): boolean => {
-  return Object.values(registerForm).every((item) => item.validate());
-};
+  return Object.values(registerForm).every((item) => item.validate())
+}
 
 const handleRegister = () => {
   if (validation()) {
     const form = {
       username: registerForm.username.content,
-      password: registerForm.password.content,
-    };
-    base.post("auth/signup", form).then((res) => {
-      console.log("signup", res);
+      password: registerForm.password.content
+    }
+    base.post('auth/signup', form).then((res) => {
+      console.log('signup', res)
       if (res?.status === 201) {
-        emit("register-success", Tips.REGISTER_SUCCESS);
+        emit('register-success', Tips.REGISTER_SUCCESS)
       } else {
-        emit("register-failed", res?.data);
+        emit('register-failed', res?.data)
       }
-    });
+    })
   }
-};
+}
 </script>
 
 <style scoped>
@@ -181,7 +181,7 @@ const handleRegister = () => {
   color: #3c4044;
 }
 .tab_item.active::before {
-  content: "";
+  content: '';
   position: absolute;
   width: 25px;
   height: 3px;

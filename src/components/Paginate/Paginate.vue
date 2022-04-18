@@ -20,7 +20,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue'
 type Props = {
     total: number
     pageSize: number

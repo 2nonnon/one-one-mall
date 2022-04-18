@@ -1,8 +1,8 @@
 <template>
-    <main class="container">
-        <CategoryNavbar></CategoryNavbar>
-        <GoodsContent></GoodsContent>
-    </main>
+  <main class="container">
+    <CategoryNavbar></CategoryNavbar>
+    <GoodsContent></GoodsContent>
+  </main>
 </template>
 
 <script setup lang="ts">
@@ -27,8 +27,8 @@ import GoodsContent from './GoodsContent/GoodsContent.vue'
 
 <style scoped>
 .container {
-    width: 100%;
-    padding: 0;
-    margin-bottom: 24px;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 24px;
 }
 </style>

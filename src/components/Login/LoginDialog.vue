@@ -25,45 +25,45 @@
 </template>
 
 <script setup lang="ts">
-import { emitter } from "../../util/emitter";
-import { ref } from "vue";
-import LoginBody from "./DialogBody/Login/LoginBody.vue";
-import RegisterBody from "./DialogBody/Register/RegisterBody.vue";
+import { emitter } from '../../util/emitter'
+import { ref } from 'vue'
+import LoginBody from './DialogBody/Login/LoginBody.vue'
+import RegisterBody from './DialogBody/Register/RegisterBody.vue'
 
-const LR = ref(true);
-const isError = ref(false);
-const isLogin = ref(false);
-const errorText = ref("");
+const LR = ref(true)
+const isError = ref(false)
+const isLogin = ref(false)
+const errorText = ref('')
 
 const handleFailed = (msg: string) => {
-  errorText.value = msg;
-  isError.value = true;
+  errorText.value = msg
+  isError.value = true
   setTimeout(() => {
-    isError.value = false;
-  }, 1000);
-};
+    isError.value = false
+  }, 1000)
+}
 const handleClose = () => {
-  isLogin.value = false;
-  LR.value = true;
-};
+  isLogin.value = false
+  LR.value = true
+}
 const handleToReg = () => {
-  LR.value = false;
-};
+  LR.value = false
+}
 
 const handleRegisterSuccess = () => {
-  LR.value = true;
-};
+  LR.value = true
+}
 
 const handleRegisterFailed = (msg: string) => {
-  console.log(msg);
-};
+  console.log(msg)
+}
 
-emitter.on("toLogin", (flag: boolean) => {
-  isLogin.value = flag;
-});
-emitter.on("logined", () => {
-  handleClose();
-});
+emitter.on('toLogin', (flag: boolean) => {
+  isLogin.value = flag
+})
+emitter.on('logined', () => {
+  handleClose()
+})
 </script>
 
 <style scoped>
