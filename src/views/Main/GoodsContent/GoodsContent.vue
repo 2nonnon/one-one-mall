@@ -3,7 +3,7 @@
     <breadcrumb default-text="全部商品"></breadcrumb>
     <sort-panel></sort-panel>
     <div class="goods_list">
-      <loading :is-loading="isLoading" :class="{ 'loading-active': isLoading }">
+      <loading :is-loading="isLoading" style="min-height: 4380px;">
         <template v-slot>
           <div class="container">
             <template v-for="item in goods" :key="item.id">
@@ -162,10 +162,6 @@ onBeforeRouteUpdate(() => {
 </script>
 
 <style scoped>
-.loading-active {
-  min-height: 4380px;
-}
-
 .goods_content {
   width: 1260px;
   margin: 0 auto;

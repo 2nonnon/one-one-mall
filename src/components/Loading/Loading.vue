@@ -1,13 +1,17 @@
 <template>
   <div class="loading">
-    <slot v-if="!isLoading"></slot>
+    <slot v-if="!show"></slot>
 
-    <div class="loading__content" v-if="isLoading">
+    <div class="loading__content" v-if="show">
       <div class="loading__gap-top"></div>
       <transition
         appear-class="img--appear"
         appear-active-class="img--appear"
         appear-to-class="img--appear-to"
+        leave-from-class="img--leave-from"
+        leave-active-class="img--leave-from"
+        leave-to-class="img--leave-to"
+        @after-leave="handleAfterLeave"
         :appear="true"
       >
         <img
@@ -15,6 +19,7 @@
           src="/Status/loadingContent.b207a25.gif"
           alt="加载中..."
           ref="img"
+          v-if="isLoading"
         />
       </transition>
       <p class="loading__title">加载中...</p>
@@ -24,7 +29,19 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{ isLoading: boolean }>()
+import { ref, watchEffect } from 'vue'
+
+const props = defineProps<{ isLoading: boolean }>()
+const show = ref(true)
+
+const handleAfterLeave = () => {
+  show.value = false
+}
+watchEffect(() => {
+  if (props.isLoading) {
+    show.value = true
+  }
+})
 </script>
 
 <style scoped>
@@ -57,7 +74,6 @@ defineProps<{ isLoading: boolean }>()
   transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
   width: 160px;
   height: 160px;
-  transform: translate(200px);
 }
 
 .loading__gap-top {
